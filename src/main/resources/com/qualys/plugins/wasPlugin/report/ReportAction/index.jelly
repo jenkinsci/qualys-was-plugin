@@ -6,7 +6,7 @@
 <l:side-panel class="padding0">
 	<div class="left-panel-container">
 		<div class="qualys_logo">
-			<img src="${resURL}/plugin/QualysWASPlugin/images/logo.png"/>
+			<img src="${resURL}/plugin/qualys-was/images/logo.png"/>
 		</div>
 	
 		<div class="left-pill-item summary selected">
@@ -19,29 +19,29 @@
 </l:side-panel>
  
 <l:main-panel>
-	<script type="text/javascript" src="${resURL}/plugin/QualysWASPlugin/js/jquery-3.4.1.min.js"></script>
-	 <script type="text/javascript" src="${resURL}/plugin/QualysWASPlugin/datatable/js/jquery.dataTables.min.js"></script>
-	 <script type="text/javascript" src="${resURL}/plugin/QualysWASPlugin/js/chart.min.js"></script>
-	 <script type="text/javascript" src="${resURL}/plugin/QualysWASPlugin/js/report.js"></script>
-	 <script type="text/javascript" src="${resURL}/plugin/QualysWASPlugin/js/chart-1.0.1.min.js"></script>
-	<link rel="stylesheet" type="text/css" href="${resURL}/plugin/QualysWASPlugin/css/style.css" />
-	<link href="${resURL}/plugin/QualysWASPlugin/datatable/css/jquery.dataTables.min.css" rel="stylesheet" type="text/css"/>
+	<script type="text/javascript" src="${resURL}/plugin/qualys-was/js/jquery-3.4.1.min.js"></script>
+	 <script type="text/javascript" src="${resURL}/plugin/qualys-was/datatable/js/jquery.dataTables.min.js"></script>
+	 <script type="text/javascript" src="${resURL}/plugin/qualys-was/js/chart.min.js"></script>
+	 <script type="text/javascript" src="${resURL}/plugin/qualys-was/js/report.js"></script>
+	 <script type="text/javascript" src="${resURL}/plugin/qualys-was/js/chart-1.0.1.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="${resURL}/plugin/qualys-was/css/style.css" />
+	<link href="${resURL}/plugin/qualys-was/datatable/css/jquery.dataTables.min.css" rel="stylesheet" type="text/css"/>
 	
 	<style>
 	 	.status-icon.not-configured{
-		     background: url('${resURL}/plugin/QualysWASPlugin/images/dash.png') no-repeat center center;
+		     background: url('${resURL}/plugin/qualys-was/images/dash.png') no-repeat center center;
 			 background-size: contain;
 			 text-align: -webkit-center;
 			 text-align: center;
 		}
 		
 		.status-icon.ok{
-			background: url('${resURL}/plugin/QualysWASPlugin/images/ok.png') no-repeat center center;
+			background: url('${resURL}/plugin/qualys-was/images/ok.png') no-repeat center center;
 	    	background-size: contain;
 	    	height:20px;
 		}
 		.status-icon.fail{
-			background: url('${resURL}/plugin/QualysWASPlugin/images/fail.png') no-repeat center center;
+			background: url('${resURL}/plugin/qualys-was/images/fail.png') no-repeat center center;
 			background-size: contain;
 		}
 		
@@ -102,28 +102,6 @@
 					</table> 
 				</div>
 				<div class="seperator-line"></div>
-				
-				
-				<!-- <div class="card" id="statusContainer" style="display:block">
-					<div class="card-title">Scan Status</div>
-					<div class="card-content">
-						<table>
-							<tr> <td class="status_header" style="float: left;">Scan Status: </td> 
-								<td class="status_value">
-										<div id="status_value" style="float: left;"></div><div id="resultsStatusDiv"></div><span id="refresh_status"> <a href="" onclick="refresh()">Refresh Status</a></span>
-										<div id="statusSpinner" >
-									      <img src="${imagesURL}/spinner.gif" /> Fetching Scan Status...
-									    </div>
-								</td> 
-							</tr>
-							<tr> <td class="status_header">Scan ID: </td>  <td>  </td></tr>
-							<tr> <td class="status_header">Scan Name: </td> <td> ${it.scanName} </td> </tr>
-							<tr id="scanRef" style="display:none;"> <td class="status_header"> Scan Reference #: </td>  <td id="reference">  </td></tr>
-							<tr id="targetUrlTR" style="display:none;"> <td class="status_header"> Target URL: </td>  <td> <a href="" id="targetUrl">  </a></td></tr>
-						</table>
-					</div>
-				</div> -->
-				
 				
 				<div id="charts-widgets" style="display:none;">				
 					<div class="card" id="reportContainer" style="display:none">
@@ -313,41 +291,6 @@
              	}
          }
       	
-      	/* function getStatus() {
-      		myAction.getStatus(function(t){
-             	spinner.style.display="none";
-             	var a = t.responseObject();
-             	var statusVal = document.getElementById("status_value");
-             	
-             	statusVal.innerHTML = a.value;
-             	document.getElementById("reference").innerHTML = a.reference;
-             	document.getElementById("targetUrl").innerHTML = a.targetUrl;
-             	if(a.targetUrl) document.getElementById("targetUrl").setAttribute("href",a.targetUrl);
-             	document.getElementById("scanRef").style.display="table-cell";
-	            document.getElementById("targetUrlTR").style.display="table-cell";
-             	statusVal.classList.add(a.cssClass);
-             	if("resultsStatus" in a){
-             		var rsElement = document.getElementById("resultsStatusDiv");
-             		rsElement.innerHTML = "[ " + a.resultsStatus + " ]";
-             		rsElement.style.display="block";
-             		rsElement.style.float="left";
-             	}
-             	
-             	if(a.cssClass === "success"){
-             		refreshLink.style.display = "none";
-             		reportDiv.style.display = "block";
-             		chartWidgetsDiv.style.display = "block";
-             		scanResults = ${it.scanResult};
-             		showReport(scanResults);
-             		drawVulnsCharts(scanResults)
-             		showEvaluationSummary(scanResults);
-					showVulnsTable(scanResults);
-             	}else{
-             		refreshLink.style.display = "block";
-             	}
-             }); 
-             
-       }*/
 	</script>
 
 </l:main-panel>

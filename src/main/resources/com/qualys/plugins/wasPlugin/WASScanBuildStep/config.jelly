@@ -57,14 +57,14 @@
     
     <f:block>
     	<div class="qualys_logo">
-			<img src="${resURL}/plugin/QualysWASPlugin/images/logo.png"/>
+			<img src="${resURL}/plugin/qualys-was/images/logo.png"/>
 		</div>
     </f:block>
     
     <f:section title="API Login">
     	<f:block> <div> Provide details for accessing the Qualys WAS API.  </div> <br /> </f:block>
 		 
-        <f:entry title="Your Qualys Portal" field="platform" help="/plugin/QualysWASPlugin/help/platform.html">
+        <f:entry title="Your Qualys Portal" field="platform" help="/plugin/qualys-was/help/platform.html">
 	        <select name="platform" id="platform">
 	        	<j:forEach var="d" items="${descriptor.getPlatforms()}" varStatus="loop">
 		        	<option value="${d.code}">${d.name}</option>
@@ -72,22 +72,22 @@
 		    </select>
 	    </f:entry>
 	    <f:block >
-	    	<f:entry field="apiServer" title="API Server URL:" help="/plugin/QualysWASPlugin/help/apiServer.html">
+	    	<f:entry field="apiServer" title="API Server URL:" help="/plugin/qualys-was/help/apiServer.html">
 		        <f:textbox id="apiServer" />
 		    </f:entry>
 	    </f:block >
 		
 		
-	    <f:entry field="credsId" title=" ${%Credentials}" help="/plugin/QualysWASPlugin/help/credentialsId.html">
+	    <f:entry field="credsId" title=" ${%Credentials}" help="/plugin/qualys-was/help/credentialsId.html">
 			<c:select id="credsId" />
 		</f:entry>
 	    
 	    <f:optionalBlock name="useProxy" title="Use Proxy Settings" field="useProxy" inline="true">
 	    	<f:block> <div style="margin-left:30px;">
-		    	<f:entry title="Proxy Server:" field="proxyServer" description="Examples: 10.15.201.155, corp.proxyserver.company.com" help="/plugin/QualysWASPlugin/help/proxyServer.html" >
+		    	<f:entry title="Proxy Server:" field="proxyServer" description="Examples: 10.15.201.155, corp.proxyserver.company.com" help="/plugin/qualys-was/help/proxyServer.html" >
 		        	<f:textbox style="width: 50%; min-width: 320px;" id="proxyServer" />
 		    	</f:entry>
-		    	<f:entry title="Proxy Port:" default="80" field="proxyPort" help="/plugin/QualysWASPlugin/help/proxyPort.html">
+		    	<f:entry title="Proxy Port:" default="80" field="proxyPort" help="/plugin/qualys-was/help/proxyPort.html">
 		        	<f:textbox style="width: 15%; min-width: 80px;" id="proxyPort" />
 		    	</f:entry>
 		    	<f:entry field="proxyCredentialsId" title=" ${%Credentials}" help="/plugin/qualys-api-security/help/proxyCredentialsId.html">
@@ -102,14 +102,14 @@
 	
     <f:section title="Launch Scan API Parameters">
     	<f:block> <div> Provide information required to launch the scan  </div> <br /> </f:block>
-		<f:entry title="Select Web Application from WAS" field="webAppId" help="/plugin/QualysWASPlugin/help/webAppId.html">
+		<f:entry title="Select Web Application from WAS" field="webAppId" help="/plugin/qualys-was/help/webAppId.html">
 	        <f:select fillDependsOn="apiServer credsId" style="width: 35%; min-width: 250px;" />
 	    </f:entry>
 	    	
-	    <f:entry title="Scan Name" field="scanName" help="/plugin/QualysWASPlugin/help/scanName.html">
+	    <f:entry title="Scan Name" field="scanName" help="/plugin/qualys-was/help/scanName.html">
 	        <f:textbox style="width: 50%; min-width: 320px;" default="[job_name]_jenkins_build_[build_number]" />
 	    </f:entry>
-	    <f:entry title="Scan Type" field="scanType" name="scanType" help="/plugin/QualysWASPlugin/help/scanType.html">
+	    <f:entry title="Scan Type" field="scanType" name="scanType" help="/plugin/qualys-was/help/scanType.html">
 		    <select name="scanType">
 		        <option value="VULNERABILITY">VULNERABILITY</option>
 		        <option value="DISCOVERY">DISCOVERY</option>
@@ -119,7 +119,7 @@
 	
 	<f:section title="Optional Parameters">
     	<f:block> <div> Provide Optional API parameters required to call LaunchScanAPI  </div> <br /> </f:block>
-		<f:entry title="Authentication Record" field="authRecord" help="/plugin/QualysWASPlugin/help/authRecord.html">
+		<f:entry title="Authentication Record" field="authRecord" help="/plugin/qualys-was/help/authRecord.html">
 	        <select name="authRecord" id="authRecord">
 	        	<option value="none">None</option>
 		        <option value="useDefault">Use Default</option>
@@ -127,24 +127,24 @@
 		     </select>
 	    </f:entry>
 	    <f:block >
-	    	<f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; Auth Record Name:" field="authRecordId" name="authRecordId" id="otherAuth" help="/plugin/QualysWASPlugin/help/authRecordId.html">
+	    	<f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; Auth Record Name:" field="authRecordId" name="authRecordId" id="otherAuth" help="/plugin/qualys-was/help/authRecordId.html">
 		        <f:select fillDependsOn="apiServer credsId" style="width: 35%; min-width: 250px;" />
 		    </f:entry>
 	    </f:block >
 	    
-	    <f:entry title="Option Profile" field="optionProfile" help="/plugin/QualysWASPlugin/help/optionProfile.html">
+	    <f:entry title="Option Profile" field="optionProfile" help="/plugin/qualys-was/help/optionProfile.html">
 	        <select name="optionProfile" id="optionProfile">
 	        	<option value="useDefault">Use Default</option>
 		        <option value="other">Other</option>
 		    </select>
 	    </f:entry>
 	    <f:block >
-	    	<f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; Profile Name:" field="optionProfileId" name="optionProfileId" id="otherOption" help="/plugin/QualysWASPlugin/help/optionProfileId.html">
+	    	<f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; Profile Name:" field="optionProfileId" name="optionProfileId" id="otherOption" help="/plugin/qualys-was/help/optionProfileId.html">
 		        <f:select fillDependsOn="apiServer credsId" style="width: 35%; min-width: 250px;" />
 		    </f:entry>
 	    </f:block >
 	    
-	    <f:entry title="Cancel Options" field="cancelOptions" help="/plugin/QualysWASPlugin/help/cancelOption.html">
+	    <f:entry title="Cancel Options" field="cancelOptions" help="/plugin/qualys-was/help/cancelOption.html">
 	        <select name="cancelOptions" id="cancelOptions">
 	        	<option value="none">None</option>
 		        <option value="xhours">Cancel After X Hours</option>
@@ -170,7 +170,7 @@
 						<div id="severityTitle" class="conditionTitle">&#160; &#160; &#160; &#160; &#160; &#160; &#160; By Vulnerability Severity</div> 
 			    	</f:block>
 					
-					<f:entry  help="/plugin/QualysWASPlugin/help/severity.html"></f:entry>
+					<f:entry  help="/plugin/qualys-was/help/severity.html"></f:entry>
 			      	
 			      	<f:block>
 				      	<div class="severityBlock" id="SeveritySection">
@@ -199,7 +199,7 @@
 						<div class="conditionTitle"> &#160; &#160; &#160; &#160; &#160; &#160; &#160; By Qualys WAS Vulnerability Identifiers (QIDs)</div>
 					</f:block>
 					
-					<f:entry  help="/plugin/QualysWASPlugin/help/qids.html"></f:entry>
+					<f:entry  help="/plugin/qualys-was/help/qids.html"></f:entry>
 			      	
 			      	<f:block>	
 			      		<div class="severityBlock" id="qidSection">
@@ -223,14 +223,14 @@
 				    <f:block>
 						<div style="margin-top:5px;"> &#160; &#160; &#160; &#160; &#160; &#160; &#160; Frequency</div>
 					</f:block>
-				    <f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160;  How often to check for data " field="pollingInterval" help="/plugin/QualysWASPlugin/help/polling.html">
+				    <f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160;  How often to check for data " field="pollingInterval" help="/plugin/qualys-was/help/polling.html">
 					    <f:textbox style="width: 15%;" default="5"/> minutes.
 					</f:entry>
 					
 					<f:block>
 						<div> &#160; &#160; &#160; &#160; &#160; &#160; &#160; Timeout</div>
 					</f:block>
-				    <f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; How long to wait for scan results" field="vulnsTimeout" help="/plugin/QualysWASPlugin/help/timeout.html">
+				    <f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; How long to wait for scan results" field="vulnsTimeout" help="/plugin/qualys-was/help/timeout.html">
 					    <f:textbox style="width: 15%;" default="60*24"/> minutes.
 					</f:entry>
 					
