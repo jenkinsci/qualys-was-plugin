@@ -1,0 +1,7 @@
+<?jelly escape-by-default='true'?>
+<!--
+  This view is used to render the installed plugins page.
+-->
+<div>
+  Provides a post-deploy step to run a vulnerability scan using the Qualys Web Application Scanning (WAS) service.
+</div>

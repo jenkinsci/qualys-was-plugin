@@ -1,0 +1,386 @@
+#page-body {
+    height: auto;
+    width: 100%;
+}
+.qualys_logo {
+	padding: 20px 20px 10px;
+  		background-color: #DDE4E7;
+}
+
+.qualys_logo img{
+	width:115px;
+}
+#side-panel {
+	padding:0;
+	//float: left;
+	width:250px !important;
+	//display:block;
+	-webkit-box-sizing: border-box;
+ 		-moz-box-sizing: border-box;
+	  box-sizing: border-box;
+	display: block;
+    position: absolute;
+    top: 66px;
+    bottom: 0;
+}
+
+.left-panel-container {
+	height: 100%;
+	background-color:#DDE4E7;
+	padding: 0px 5px 80px 5px;
+}
+
+.left-panel-container .left-pill-item{
+	margin: 13px 0 -10px 0;
+    color: #37474E;
+    cursor: pointer;
+    height: 35px;
+    padding: 2px 4px 2px 10px;
+    font-size: 18px;
+   	color: #607D8D;
+   	font-weight: 600;
+}
+
+.left-panel-container .selected{
+	cursor: default;
+   	background-color: #FFFFFF;
+}
+
+.left-panel-container .left-pill-item span{
+	-webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    font-size: 13px;
+    padding: 4px 4px 4px 0;
+    line-height: 29px;
+}
+.statusContainer{
+  		margin-top:30px;
+  	}
+  
+.statusContainer td, .card-content td{
+    word-break: break-all;
+    color: #607d8d;
+    text-align: left;
+    vertical-align: middle;
+  	}
+.status_header {
+    color: #607d8d;
+    font-weight: 700;
+    line-height: 22px;
+}
+.title_header {
+	font-size: 18px;
+    font-weight: bold;
+}
+#side-panel {
+    width: 260px;
+}
+
+#main-panel {
+    margin-left: 270px !important;
+}
+.error{
+	color: red;
+}
+
+.success{
+	color: green;
+	font-weight: bold;
+}
+
+.marginLeft10{
+	margin-left:10px;
+}
+.clear-both{
+	clear: both;
+}
+#resultsStatusDiv{
+	margin-right:15px;
+}
+
+.scan_status_header label{
+	font-family: RobotoLight;
+    font-size: 30px;
+    padding-bottom: 20px;
+    color: #37474E;
+   }
+.card {
+	float: left;
+	position: relative;
+	height: 280px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    display: inline-block;
+    width: 355px;
+    margin: 15px 20px 15px 0px;
+    box-shadow: 0 4px 16px -2px #607d8d;
+}
+
+.card-title{
+    height: 45px;
+    background: #F4F4F4;
+    font-family: RobotoLight;
+    font-size: 26px;
+    padding-left: 35px;
+    padding-top: 10px;
+    color: #37474E;
+}
+
+.card-content{
+	margin-left: 20px;
+  	margin-top: 25px;
+}
+
+#resultsStatusSpinner{
+	float: left; 
+	margin-left: 60px; 
+	margin-top: 80px;
+}
+#resultsError{
+	display:none;
+	margin-top: 20px;
+}
+#refresh_status{
+	display:none;
+	font-size: 13px;
+	margin-left: 65px; 
+	font-weight:normal;
+}
+#statusSpinner{
+	margin-left: 10px;
+	display:none;
+}
+
+.build-summary-reason {
+	margin-top: 20px;
+}
+
+#summary-legend-div span{
+	font-size: 11px;
+}
+#summary-chart.vulnschart{
+	width: 1110px;
+	height: 184px;	
+}
+#summary-legend-div{
+	margin-top: 5px;
+}
+.image-status-flag{
+	height: 24px;
+   	width: 24px;
+   	background-size: contain;
+   	float: left;
+}
+
+.column-header td{
+	font-weight: bold;
+}
+
+#build-summary-table td, #build-summary-table th {
+ 		padding: 10px;
+ 		text-align:center;
+}
+
+#build-summary-table{
+	border-collapse: collapse;
+	width: 100%;
+	margin-top: 15px;
+}
+
+#build-summary-table td{
+	height: 44px;
+    background-repeat: no-repeat;
+    background-position: center center;
+    border: 1px solid #d4d4d4;
+    background-color: #ffffff;
+    color: #555555;
+    padding: 11px 5px 11px 5px;
+    vertical-align: middle;
+}
+
+.vulnschart {
+	float: left;
+	//width:33%;
+	position: relative;
+	height: 260px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    display: inline-block;
+    width: 310px;
+    margin: 15px 30px 15px 0px;
+    padding: 15px;
+    box-shadow: 0 4px 16px -2px #607d8d;
+}
+
+.status-icon.legend {
+    height: 12px;
+    width: 12px;
+    float: left;
+    margin-top: 2px;
+}
+
+.status-icon.legend.fail, .status-icon.legend.not-configured {
+    margin-top: 4px;
+}
+
+.status-icon.image-scan-status {
+    height: 16px;
+    float: left;
+    width: 100%;
+}
+
+
+/* tooltip */
+	.wrapper{
+	    position:relative;
+	}
+	.tooltip {
+	    transform: none; 
+	}
+	
+	.tooltip:hover > .tooltip-text, .tooltip:hover > .wrapper {
+	    pointer-events: auto;
+	    opacity: 1.0;
+	}
+	
+	.tooltip > .tooltip-text, .tooltip >.wrapper {
+	    display: block;
+	    position: absolute;
+	    z-index: 6000;
+	    overflow: visible;
+	    padding: 5px 8px;
+	    margin-top: 20px;
+	    line-height: 16px;
+	    border-radius: 4px;
+	    text-align: left;
+	    color: #fff;
+	    background: #000;
+	    pointer-events: none;
+	    opacity: 0.0;
+	    -o-transition: all 0.3s ease-out;
+	    -ms-transition: all 0.3s ease-out;
+	    -moz-transition: all 0.3s ease-out;
+	    -webkit-transition: all 0.3s ease-out;
+	    transition: all 0.3s ease-out;
+	}
+	
+	/* Arrow */
+	.tooltip > .tooltip-text:before, .tooltip > .wrapper:before  {
+	    display: inline;
+	    top: -5px;
+	    content: "";
+	    position: absolute;
+	    border: solid;
+	    border-color: rgba(0, 0, 0, 1) transparent;
+	    border-width: 0 .5em .5em .5em;
+	    z-index: 6000;
+	    left: 20px;
+	}
+	
+	/* Invisible area so you can hover over tooltip */
+	.tooltip > .tooltip-text:after, .tooltip > .wrapper:after  {
+	    top: -20px;
+	    content: " ";
+	    display: block;
+	    height: 20px;
+	    position: absolute;
+	    width: 60px;
+	    left: 20px;
+	}
+	
+	.wrapper > .tooltip-text {
+	    overflow-y: auto;
+	    max-height: 90px;
+	    display: block;
+	    word-break: break-all;
+	}
+	
+	
+#vulnsTable-content{
+	margin-top:30px;
+	display:table;
+	width:100%;
+}
+
+#vulnsTable_length.dataTables_length{
+	 margin-top: 5px;
+}
+
+#vulnsTable_info.dataTables_info{
+	text-align: center;
+}
+
+.summary-title {
+	color: #607D8D;
+	font-family: RobotoLight;
+   	font-size: 30px;
+}
+
+#summary-content {
+	display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    margin-top: 10px;
+    box-sizing: border-box;
+}
+	
+	#summary-right-panel {
+		border: 1px solid #e1e7e9;
+	    border-width: 1px 1px 1px 0;
+	    background: #f5f5f5;
+	    padding: 20px 30px;
+	    width: 100%;
+	}
+	
+.report-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.label-value {
+    font-weight: 200;
+}
+
+.seperator-line {
+		padding-bottom: 10px;
+	    border-bottom: 1px solid #CFD6DC;
+	    margin-bottom: 10px;
+	}
+	
+#sevVulns{
+	float: left;
+	margin: 14px 10px 10px 30px;
+}
+
+.chart-legend {
+    width: 90px;
+    float: right;
+    position: absolute;
+    top: 50%;
+    height: 100px;
+    margin-top: -50px;
+    right: 0;
+    margin-right: 20px;
+}
+
+.chart-legend ul {
+    list-style-type: none;
+    padding: 0;
+    width: 100%;
+}
+
+.chart-legend ul li {
+    display: inline;
+    position: relative;
+    display: inline-block;
+}
+
+.chart-legend li span {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+}

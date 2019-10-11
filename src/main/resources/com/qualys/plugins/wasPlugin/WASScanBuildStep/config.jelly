@@ -1,0 +1,317 @@
+<?jelly escape-by-default='true'?>
+<j:jelly
+        xmlns:j="jelly:core"
+        xmlns:st="jelly:stapler"
+        xmlns:d="jelly:define"
+        xmlns:l="/lib/layout"
+        xmlns:t="/lib/hudson"
+        xmlns:f="/lib/form"
+        xmlns:c="/lib/credentials">
+    <style>
+    	.extraInput {
+    		padding-left:15%;
+    	}
+    	
+    	#webInfoMessage{
+    		font-size: 0.9em !important;
+    		padding: 0 0 1em 1em;
+    	}
+    	select {
+    		height: 29px;
+    	}
+    	#authInfoSpinner, #authInfoMessage, #profileInfoMessage, #profileInfoSpinner{
+    		 margin-left: 17%;
+    		 margin-top: -10px;
+    		 margin-bottom: 10px;
+    	}
+    	.qualys_logo{
+    		float:right;
+    	}
+    	.qualys_logo img{
+    		width:100px;
+    	}
+    	
+    	.margin-top-10{
+    		margin-top: 10px;
+    	}
+    	.severityBlock{
+    		margin-left:45px !important;
+    	}
+    	.conditionTitle{
+    		 margin-bottom: -20px;
+    		 margin-top: 10px;
+    	}
+    	
+    	#severityTitle{
+    		margin-bottom: -36px;
+    	}
+    	#qidSevSection.severityBlock{
+    		margin-left: -125px !important;
+    	}
+    	
+    	
+    </style>
+    <script>
+    	
+	</script>
+    
+    <f:block>
+    	<div class="qualys_logo">
+			<img src="${resURL}/plugin/QualysWASPlugin/images/logo.png"/>
+		</div>
+    </f:block>
+    
+    <f:section title="API Login">
+    	<f:block> <div> Provide details for accessing the Qualys WAS API.  </div> <br /> </f:block>
+		 
+        <f:entry title="Your Qualys Portal" field="platform" help="/plugin/QualysWASPlugin/help/platform.html">
+	        <select name="platform" id="platform">
+	        	<j:forEach var="d" items="${descriptor.getPlatforms()}" varStatus="loop">
+		        	<option value="${d.code}">${d.name}</option>
+			   </j:forEach>
+		    </select>
+	    </f:entry>
+	    <f:block >
+	    	<f:entry field="apiServer" title="API Server URL:" help="/plugin/QualysWASPlugin/help/apiServer.html">
+		        <f:textbox id="apiServer" />
+		    </f:entry>
+	    </f:block >
+		
+		
+	    <f:entry field="credsId" title=" ${%Credentials}" help="/plugin/QualysWASPlugin/help/credentialsId.html">
+			<c:select id="credsId" />
+		</f:entry>
+	    
+	    <f:optionalBlock name="useProxy" title="Use Proxy Settings" field="useProxy" inline="true">
+	    	<f:block> <div style="margin-left:30px;">
+		    	<f:entry title="Proxy Server:" field="proxyServer" description="Examples: 10.15.201.155, corp.proxyserver.company.com" help="/plugin/QualysWASPlugin/help/proxyServer.html" >
+		        	<f:textbox style="width: 50%; min-width: 320px;" id="proxyServer" />
+		    	</f:entry>
+		    	<f:entry title="Proxy Port:" default="80" field="proxyPort" help="/plugin/QualysWASPlugin/help/proxyPort.html">
+		        	<f:textbox style="width: 15%; min-width: 80px;" id="proxyPort" />
+		    	</f:entry>
+		    	<f:entry field="proxyCredentialsId" title=" ${%Credentials}" help="/plugin/qualys-api-security/help/proxyCredentialsId.html">
+					<c:select id="proxyCredentialsId" />
+				</f:entry>
+		    </div></f:block> 
+	    </f:optionalBlock>
+	    
+	    <f:validateButton title="Test Connection" progress="Testing..." method="checkConnection" with="platform,apiServer,credsId,proxyServer,proxyPort,proxyCredentialsId,useProxy"/>
+	</f:section>
+	
+	
+    <f:section title="Launch Scan API Parameters">
+    	<f:block> <div> Provide information required to launch the scan  </div> <br /> </f:block>
+		<f:entry title="Select Web Application from WAS" field="webAppId" help="/plugin/QualysWASPlugin/help/webAppId.html">
+	        <f:select fillDependsOn="apiServer credsId" style="width: 35%; min-width: 250px;" />
+	    </f:entry>
+	    	
+	    <f:entry title="Scan Name" field="scanName" help="/plugin/QualysWASPlugin/help/scanName.html">
+	        <f:textbox style="width: 50%; min-width: 320px;" default="[job_name]_jenkins_build_[build_number]" />
+	    </f:entry>
+	    <f:entry title="Scan Type" field="scanType" name="scanType" help="/plugin/QualysWASPlugin/help/scanType.html">
+		    <select name="scanType">
+		        <option value="VULNERABILITY">VULNERABILITY</option>
+		        <option value="DISCOVERY">DISCOVERY</option>
+		    </select>
+		</f:entry>
+	</f:section>
+	
+	<f:section title="Optional Parameters">
+    	<f:block> <div> Provide Optional API parameters required to call LaunchScanAPI  </div> <br /> </f:block>
+		<f:entry title="Authentication Record" field="authRecord" help="/plugin/QualysWASPlugin/help/authRecord.html">
+	        <select name="authRecord" id="authRecord">
+	        	<option value="none">None</option>
+		        <option value="useDefault">Use Default</option>
+		        <option value="other">Other</option>
+		     </select>
+	    </f:entry>
+	    <f:block >
+	    	<f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; Auth Record Name:" field="authRecordId" name="authRecordId" id="otherAuth" help="/plugin/QualysWASPlugin/help/authRecordId.html">
+		        <f:select fillDependsOn="apiServer credsId" style="width: 35%; min-width: 250px;" />
+		    </f:entry>
+	    </f:block >
+	    
+	    <f:entry title="Option Profile" field="optionProfile" help="/plugin/QualysWASPlugin/help/optionProfile.html">
+	        <select name="optionProfile" id="optionProfile">
+	        	<option value="useDefault">Use Default</option>
+		        <option value="other">Other</option>
+		    </select>
+	    </f:entry>
+	    <f:block >
+	    	<f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; Profile Name:" field="optionProfileId" name="optionProfileId" id="otherOption" help="/plugin/QualysWASPlugin/help/optionProfileId.html">
+		        <f:select fillDependsOn="apiServer credsId" style="width: 35%; min-width: 250px;" />
+		    </f:entry>
+	    </f:block >
+	    
+	    <f:entry title="Cancel Options" field="cancelOptions" help="/plugin/QualysWASPlugin/help/cancelOption.html">
+	        <select name="cancelOptions" id="cancelOptions">
+	        	<option value="none">None</option>
+		        <option value="xhours">Cancel After X Hours</option>
+		    </select>
+	    </f:entry>
+	    <f:block >
+	    	<f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; Hours:" field="cancelHours">
+		        <f:select style="width: 65px; min-width: 65px;"  id="cancelHours" />
+		    </f:entry>
+	    </f:block >
+	    
+	    
+	    <f:block>
+			<f:section title="Configure Scan Pass/Fail Criteria">
+				<f:block> 
+					<div>Set the conditions to fail the build job. The build will fail when ANY of conditions are met. </div> <br />
+					
+					<f:block>
+						<div class="failureTitle">&#160; &#160; &#160; &#160; <b>Failure Conditions</b></div>
+				     </f:block>
+				     
+					 <f:block>
+						<div id="severityTitle" class="conditionTitle">&#160; &#160; &#160; &#160; &#160; &#160; &#160; By Vulnerability Severity</div> 
+			    	</f:block>
+					
+					<f:entry  help="/plugin/QualysWASPlugin/help/severity.html"></f:entry>
+			      	
+			      	<f:block>
+				      	<div class="severityBlock" id="SeveritySection">
+					        &#160; &#160; &#160; &#160; &#160; &#160; &#160; <f:checkbox field="isSev1Vulns" title="Fail with more than " />
+					        <f:textbox field="severity1Limit" name="severity1Limit" style="width:9%; min-width:45px; max-width:50px;" default="0" /> severity 1  &#160; &#160; &#160; NOTE: Severity 1 rating is least severe and severity 5 is most severe
+					    </div>
+				      	<div class="severityBlock">
+					        &#160; &#160; &#160; &#160; &#160; &#160; &#160; <f:checkbox field="isSev2Vulns" title="Fail with more than   " />
+					        <f:textbox field="severity2Limit" name="severity2Limit" style="width:9%; min-width:45px; max-width:50px;" default="0"/> severity 2
+					    </div>
+				      	<div class="severityBlock"> 
+					        &#160; &#160; &#160; &#160; &#160; &#160; &#160; <f:checkbox field="isSev3Vulns" title="Fail with more than   " />
+					        <f:textbox field="severity3Limit" name="severity3Limit" style="width:9%; min-width:45px; max-width:50px;" default="0"/> severity 3
+					   </div>
+				      	<div class="severityBlock"> 
+					        &#160; &#160; &#160; &#160; &#160; &#160; &#160; <f:checkbox field="isSev4Vulns" title="Fail with more than   " />
+					        <f:textbox field="severity4Limit" name="severity4Limit" style="width:9%; min-width:45px; max-width:50px;" default="0"/> severity 4
+					   </div>
+					   <div class="severityBlock"> 
+					        &#160; &#160; &#160; &#160; &#160; &#160; &#160; <f:checkbox field="isSev5Vulns" title="Fail with more than   " />
+					        <f:textbox field="severity5Limit" name="severity5Limit" style="width:9%; min-width:45px; max-width:50px;" default="0"/> severity 5
+					   </div>
+					</f:block>
+					
+					<f:block>
+						<div class="conditionTitle"> &#160; &#160; &#160; &#160; &#160; &#160; &#160; By Qualys WAS Vulnerability Identifiers (QIDs)</div>
+					</f:block>
+					
+					<f:entry  help="/plugin/QualysWASPlugin/help/qids.html"></f:entry>
+			      	
+			      	<f:block>	
+			      		<div class="severityBlock" id="qidSection">
+					        &#160; &#160; &#160; &#160; &#160; &#160; &#160; <f:checkbox field="isFailOnQidFound" title="Fail with any of these QIDs:" />
+					        <f:textbox field="qidList" name="qidList" style="width:60%; min-width:70px;" description="Example: 179203,2331497,170560-170590" />
+					    </div>
+					    <div>
+					    	<br />
+					    	&#160; &#160; &#160; &#160; &#160; &#160; &#160; <f:checkbox field="failOnScanError" title="Fail the build if WAS could not scan the web application"/>
+					    	<br />
+					    </div>
+			    	</f:block>
+			    </f:block>	
+			    
+			    
+			    <f:block>
+					<div class="failureTitle">&#160; &#160; &#160; &#160; <b>Timeout Settings</b></div>
+				</f:block>
+			    
+			    <f:block> <div style="margin-top: -5px;"> &#160; &#160; &#160; &#160; Qualys WAS Scan results will be collected per these settings. For each enter a value in minutes or an expression like 2*60 for 2 hours. <br /> </div> 
+				    <f:block>
+						<div style="margin-top:5px;"> &#160; &#160; &#160; &#160; &#160; &#160; &#160; Frequency</div>
+					</f:block>
+				    <f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160;  How often to check for data " field="pollingInterval" help="/plugin/QualysWASPlugin/help/polling.html">
+					    <f:textbox style="width: 15%;" default="5"/> minutes.
+					</f:entry>
+					
+					<f:block>
+						<div> &#160; &#160; &#160; &#160; &#160; &#160; &#160; Timeout</div>
+					</f:block>
+				    <f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; How long to wait for scan results" field="vulnsTimeout" help="/plugin/QualysWASPlugin/help/timeout.html">
+					    <f:textbox style="width: 15%;" default="60*24"/> minutes.
+					</f:entry>
+					
+				</f:block>
+			    
+			    
+			    <f:entry>
+			    	<f:textbox field="" style="visibility:hidden"/>
+			    </f:entry>
+			</f:section>  
+			
+		</f:block>
+	        
+	</f:section>
+	
+	
+	<script>
+		    var otherAuthTr = document.getElementsByName("_.authRecordId")[0].parentNode.parentNode;
+		    var otherOptionTr = document.getElementsByName("_.optionProfileId")[0].parentNode.parentNode;
+		    var xHrsTr = document.getElementsByName("_.cancelHours")[0].parentNode.parentNode;
+		    var apiServerTr = document.getElementsByName("_.apiServer")[0].parentNode.parentNode;
+		    otherOptionTr.style.display = 'none';
+		    otherAuthTr.style.display = 'none';
+		    xHrsTr.style.display = 'none';
+		    
+			apiServerTr.style.display = 'none';
+			apiServerTr.next('tr').style.display = 'none';
+			
+			document.getElementById("platform").onchange = function(){
+				if(this.value === "PCP"){
+					apiServerTr.style.display = 'table-row';
+					apiServerTr.next('tr').style.display = 'table-row';
+				}else{
+					apiServerTr.style.display = 'none';
+					apiServerTr.next('tr').style.display = 'none';
+				}
+			}
+			
+			for(i=1; i &lt; 25; i++){
+				var option = document.createElement("option");
+				option.text = i;
+				option.value = i;
+				var select = document.getElementById("cancelHours");
+				select.appendChild(option);
+			}
+			
+			document.getElementById("optionProfile").onchange = function(){
+				if(this.value === "other"){
+					otherOptionTr.style.display = 'table-row';
+					otherOptionTr.next().style.display='table-row';
+				}else{
+					otherOptionTr.style.display = 'none';
+					otherOptionTr.next().style.display='none';
+				}
+			}
+			document.getElementById("authRecord").onchange = function(){
+				if(this.value === "other"){
+					otherAuthTr.style.display = 'table-row';
+					otherAuthTr.next().style.display='table-row';
+				}else{
+					otherAuthTr.style.display = 'none';
+					otherAuthTr.next().style.display='none';
+				}
+			}
+			document.getElementById("cancelOptions").onchange = function(){
+				if(this.value === "xhours")
+					xHrsTr.style.display = 'table-row';
+				else
+					xHrsTr.style.display = 'none';
+			}
+			
+		
+		for(i=1; i &lt; 25; i++){
+			var option = document.createElement("option");
+			option.text = i;
+			option.value = i;
+			var select = document.getElementById("cancelHours");
+			select.appendChild(option);
+		}
+		
+	</script>
+	
+    
+</j:jelly>
