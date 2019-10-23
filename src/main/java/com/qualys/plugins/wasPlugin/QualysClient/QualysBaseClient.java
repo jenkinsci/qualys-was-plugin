@@ -59,7 +59,6 @@ class QualysBaseClient {
   	    	  .setConnectionRequestTimeout(this.timeout * 1000)
   	    	  .setSocketTimeout(this.timeout * 1000).build(); // Timeout settings
     	SSLContextBuilder builder = new SSLContextBuilder();
-    	//builder.loadTrustMaterial(null, (chain, authType) -> true);
     	SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(builder.build());
     	final HttpClientBuilder clientBuilder = HttpClients.custom().setSSLSocketFactory(sslsf);
     	
