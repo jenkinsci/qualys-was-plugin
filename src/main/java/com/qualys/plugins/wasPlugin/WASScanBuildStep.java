@@ -68,8 +68,6 @@ public class WASScanBuildStep extends AbstractStepImpl {
     private int proxyPort;
     private String proxyCredentialsId;
     private boolean useProxy = false;
-    private String proxyUsername;
-    private Secret proxyPassword;
     
     private String pollingInterval;
     private String vulnsTimeout;
@@ -128,24 +126,6 @@ public class WASScanBuildStep extends AbstractStepImpl {
 	@DataBoundSetter
 	public void setVulnsTimeout(String vulnsTimeout) {
 		this.vulnsTimeout = vulnsTimeout;
-	}
-	
-	public String getProxyPassword() {
-		return proxyPassword != null ? proxyPassword.getPlainText() : "";
-	}
-
-	@DataBoundSetter
-	public void setProxyPassword(String proxyPassword) {
-		this.proxyPassword = Secret.fromString(proxyPassword);
-	}
-	
-	public String getProxyUsername() {
-		return proxyUsername;
-	}
-
-	@DataBoundSetter
-	public void setProxyUsername(String proxyUsername) {
-		this.proxyUsername = proxyUsername;
 	}
 
 	@DataBoundSetter
@@ -408,8 +388,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
     		String authRecord, String optionProfile, String cancelOptions, String cancelHours, String optionProfileId, String authRecordId, 
     		String proxyServer, int proxyPort, String proxyCredentialsId, boolean useProxy, String pollingInterval, String vulnsTimeout,
     		int severity1Limit, int severity2Limit, int severity3Limit, int severity4Limit, int severity5Limit, boolean isSev1Vulns,
-    		boolean isSev2Vulns, boolean isSev3Vulns, boolean isSev4Vulns, boolean isSev5Vulns, boolean isFailOnQidFound, String qidList, String platform, boolean failOnScanError,
-    		String proxyUsername, String proxyPassword) {
+    		boolean isSev2Vulns, boolean isSev3Vulns, boolean isSev4Vulns, boolean isSev5Vulns, boolean isFailOnQidFound, String qidList, String platform, boolean failOnScanError) {
 		this.platform = platform;
         if(platform.equalsIgnoreCase("pcp")) {
         	this.apiServer = apiServer;
@@ -433,8 +412,6 @@ public class WASScanBuildStep extends AbstractStepImpl {
 	        this.proxyServer = proxyServer;
 	        this.proxyPort = proxyPort;
 	        this.proxyCredentialsId = proxyCredentialsId;
-	        this.proxyPassword = Secret.fromString(proxyPassword);
-	        this.proxyUsername = proxyUsername;
         }
         
         this.pollingInterval = pollingInterval;
