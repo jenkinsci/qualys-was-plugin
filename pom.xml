@@ -44,7 +44,8 @@
 
   <name>Qualys WAS Plugin</name>
   <description>Provides a post-deploy step to run a vulnerability scan using the Qualys Web Application Scanning (WAS) service.</description>
-
+  <url>https://github.com/jenkinsci/qualys-was-plugin</url>
+	
   <licenses>
     <license>
       <name>GNU General Public License v3.0</name>
