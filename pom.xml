@@ -99,7 +99,7 @@
 	<connection>scm:git:ssh://github.com/jenkinsci/qualys-was-plugin.git</connection>
 	<developerConnection>scm:git:ssh://git@github.com/jenkinsci/qualys-was-plugin.git</developerConnection>
 	<url>https://github.com/jenkinsci/qualys-was-plugin</url>
-    <tag>HEAD</tag>
+    <tag>qualys-was-2.0.4</tag>
 </scm>
 
 </project>
