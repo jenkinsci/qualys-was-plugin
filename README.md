@@ -50,7 +50,7 @@ You can set conditions to fail a build by vulnerability severity and Qualys WAS 
 
 In the Timeout settings, specify the polling frequency in minutes for collecting the WAS scan status data and the timeout duration for a running scan.
 
-### Genrate Pipeline Script *(for pipeline project only)*
+### Generate Pipeline Script *(for pipeline project only)*
 
 If you are configuring pipeline project, click the `Generate Pipeline Script` button/link. It will give you a command which you can copy and paste in your project's pipeline script. 
 
