@@ -42,7 +42,7 @@
     </plugins>
   </build>
 
-  <name>Qualys WAS Plugin</name>
+  <name>Qualys Web App Scanning Connector</name>
   <description>Provides a post-deploy step to run a vulnerability scan using the Qualys Web Application Scanning (WAS) service.</description>
   <url>https://github.com/jenkinsci/qualys-was-plugin</url>
 	
