@@ -460,7 +460,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
         public String getFunctionName() { return "qualysWASScan"; }
 
         @Override
-        public String getDisplayName() { return "Scan for vulnerabilities with Qualys WAS"; }
+        public String getDisplayName() { return "Scan web applications with Qualys WAS"; }
         
         public boolean isNonUTF8String(String string) {
         	if(string != null && !string.isEmpty()) {

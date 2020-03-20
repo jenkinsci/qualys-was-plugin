@@ -447,7 +447,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
         
     	@Override
         public String getDisplayName() {
-    		return "Scan for vulnerabilities with Qualys WAS";
+    		return "Scan web applications with Qualys WAS";
         }
 
 		@Override

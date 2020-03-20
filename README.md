@@ -1,12 +1,12 @@
-# Qualys WAS(Web Application Security) Plugin
+# Qualys Web App Scanning Connector
 
 ## About
 
-The Qualys WAS Jenkins plugin empowers DevOps teams to build application vulnerability scans into their existing CI/CD processes. By integrating scans in this manner, application security testing is accomplished earlier in the SDLC to catch and eliminate security flaws.
+The Qualys Web App Scanning Connector empowers DevOps teams to build application vulnerability scans into their existing CI/CD processes. By integrating scans in this manner, application security testing is accomplished earlier in the SDLC to catch and eliminate security flaws.
 
 ## How this plugin works
 
-When the plugin step starts, it launches a scan on the selected web application with the configured options. Qualys WAS module scans it and responds with findings and Grade score. If you have configured any pass/fail criteria, the plugin evaluates the response against that. If it finds something is not matching your criteria, it will cause exception to fail your build. Otherwise, your build job proceeds to next step (if any).  
+When the connector/plugin step starts, it launches a scan on the selected web application with the configured options. Qualys WAS module scans it and responds with findings and Grade score. If you have configured any pass/fail criteria, the plugin evaluates the response against that. If it finds something is not matching your criteria, it will cause exception to fail your build. Otherwise, your build job proceeds to next step (if any).  
 
 ## How to use this plugin
 
