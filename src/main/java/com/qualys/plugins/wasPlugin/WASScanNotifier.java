@@ -1100,7 +1100,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
     
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws AbortException {
-    	listener.getLogger().println("Qualys WASScan task - Started.");
+    	listener.getLogger().println("Qualys Web App Scanning Connector - Started.");
     	Result r = build.getResult();
         String result = r.toString();
         if (result.equals("SUCCESS")) {
@@ -1132,7 +1132,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
     
     @Override
     public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener taskListener) throws InterruptedException, IOException {
-    	taskListener.getLogger().println("Qualys WASScan task - Started.");
+    	taskListener.getLogger().println("Qualys Web App Scanning Connector - Started.");
     	if (webAppId != null && !webAppId.isEmpty()) {
              try {
             	 Item project = run.getParent();
