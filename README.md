@@ -6,7 +6,7 @@ The Qualys Web App Scanning Connector empowers DevOps teams to build application
 
 ## How this plugin works
 
-When the connector/plugin step starts, it launches a scan on the selected web application with the configured options. Qualys WAS module scans it and responds with findings and Grade score. If you have configured any pass/fail criteria, the plugin evaluates the response against that. If it finds something is not matching your criteria, it will cause exception to fail your build. Otherwise, your build job proceeds to next step (if any).  
+When the connector/plugin step starts, it launches a scan on the selected web application with the configured options. Qualys WAS module scans it and responds with findings and Grade score. If you have configured any pass/fail criteria, the plugin evaluates the response against that. If it finds something is not matching your criteria, it will cause exception to fail your build. Otherwise, your build job proceeds to next step(if any).  
 
 ## How to use this plugin
 
@@ -22,7 +22,7 @@ We recommend using this plugin step during "Post-build" phase of your job, right
 ### Configuration
 
 If you are using pipeline, you should go to "Pipeline Syntax", and select `qualysWASScan` step.
-If you are using freestyle, you should add `qualysWASScan` build step.
+If you are using freestyle, you should add `Scan web applications with Qualys WAS` build step.
 
 A form appears with several input fields. Now you are ready to configure the plugin. 
 
