@@ -110,5 +110,16 @@
 	<url>https://github.com/jenkinsci/qualys-was-plugin</url>
     <tag>HEAD</tag>
 </scm>
+<organization>
+	<name>Qualys Inc.</name>
+	<url>https://www.qualys.com/</url>
+</organization>
 
+<developers>
+	<developer>
+		<id>Qualys</id>
+		<name>Qualys Inc.</name>
+		<email>plugins@qualys.com</email>
+	</developer>
+</developers>
 </project>
