@@ -22,9 +22,11 @@ function showVulnsTable(scanResult){
             	"render":  function ( data, type, row ) {
         			var list = data.list;
         			var auth = "No";
-        			list.forEach(function(val){
-        				if(val.WasScanVulnInstance.authenticated == "false") auth = "Yes";
-        			});
+        			if(list != null) {
+        				list.forEach(function(val){
+        					if(val.WasScanVulnInstance.authenticated == "false") auth = "Yes";
+        				});
+        			}
             		return auth;
     			}
             }
