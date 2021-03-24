@@ -67,25 +67,25 @@ public class Helper {
     	platform3.put("portal", "https://qualysguard.qg3.apps.qualys.com"); aList.put("US_PLATFORM_3", platform3);
     	
     	Map<String, String> platform4 = new HashMap <String, String>();
-    	platform4.put("name", "US Platform 4"); platform4.put("code", "US_PLATFORM_4"); platform4.put("url", "https://qualysapi.qg4.apps.qualys.com");
-    	platform4.put("portal", "https://qualysguard.qg4.apps.qualys.com"); aList.put("US_PLATFORM_4", platform4);
+    	platform4.put("name", "EU Platform 1"); platform4.put("code", "EU_PLATFORM_1"); platform4.put("url", "https://qualysapi.qualys.eu");
+    	platform4.put("portal", "https://qualysguard.qualys.eu"); aList.put("EU_PLATFORM_1", platform4);
     	
     	Map<String, String> platform5 = new HashMap <String, String>();
-    	platform5.put("name", "EU Platform 1"); platform5.put("code", "EU_PLATFORM_1"); platform5.put("url", "https://qualysapi.qualys.eu");
-    	platform5.put("portal", "https://qualysguard.qualys.eu"); aList.put("EU_PLATFORM_1", platform5);
+    	platform5.put("name", "EU Platform 2"); platform5.put("code", "EU_PLATFORM_2"); platform5.put("url", "https://qualysapi.qg2.apps.qualys.eu");
+    	platform5.put("portal", "https://qualysguard.qg2.apps.qualys.eu"); aList.put("EU_PLATFORM_2", platform5);
     	
     	Map<String, String> platform6 = new HashMap <String, String>();
-    	platform6.put("name", "EU Platform 2"); platform6.put("code", "EU_PLATFORM_2"); platform6.put("url", "https://qualysapi.qg2.apps.qualys.eu");
-    	platform6.put("portal", "https://qualysguard.qg2.apps.qualys.eu"); aList.put("EU_PLATFORM_2", platform6);
-    	
-    	Map<String, String> platform7 = new HashMap <String, String>();
-    	platform7.put("name", "INDIA Platform"); platform7.put("code", "INDIA_PLATFORM"); platform7.put("url", "https://qualysapi.qg1.apps.qualys.in");
-    	platform7.put("portal", "https://qualysguard.qg1.apps.qualys.in"); aList.put("INDIA_PLATFORM", platform7);
+    	platform6.put("name", "INDIA Platform"); platform6.put("code", "INDIA_PLATFORM"); platform6.put("url", "https://qualysapi.qg1.apps.qualys.in");
+    	platform6.put("portal", "https://qualysguard.qg1.apps.qualys.in"); aList.put("INDIA_PLATFORM", platform6);
 
-    	Map<String, String> platform8 = new HashMap <String, String>();
-    	platform8.put("name", "CANADA Platform"); platform8.put("code", "CANADA_PLATFORM"); platform8.put("url", "https://qualysapi.qg1.apps.qualys.ca");
-    	platform8.put("portal", "https://qualysguard.qg1.apps.qualys.ca"); aList.put("CANADA_PLATFORM", platform8);
+    	Map<String, String> platform7 = new HashMap <String, String>();
+    	platform7.put("name", "CANADA Platform"); platform7.put("code", "CANADA_PLATFORM"); platform7.put("url", "https://qualysapi.qg1.apps.qualys.ca");
+    	platform7.put("portal", "https://qualysguard.qg1.apps.qualys.ca"); aList.put("CANADA_PLATFORM", platform7);
     	
+    	Map<String, String> platform8 = new HashMap <String, String>();
+    	platform8.put("name", "AE Platform"); platform8.put("code", "AE_PLATFORM"); platform8.put("url", "https://qualysapi.qg1.apps.qualys.ae");
+    	platform8.put("portal", "https://qualysguard.qg1.apps.qualys.ae"); aList.put("AE_PLATFORM", platform8);
+    		
     	Map<String, String> platform9 = new HashMap <String, String>();
     	platform9.put("name", "Private Cloud Platform"); platform9.put("code", "PCP"); platform9.put("url", "");
     	aList.put("PCP", platform9);
