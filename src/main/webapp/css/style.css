@@ -12,9 +12,7 @@
 }
 #side-panel {
 	padding:0;
-	//float: left;
 	width:250px !important;
-	//display:block;
 	-webkit-box-sizing: border-box;
  		-moz-box-sizing: border-box;
 	  box-sizing: border-box;
@@ -202,7 +200,6 @@
 
 .vulnschart {
 	float: left;
-	//width:33%;
 	position: relative;
 	height: 260px;
     background-color: #fff;
@@ -352,7 +349,7 @@
 	
 #sevVulns{
 	float: left;
-	margin: 14px 10px 10px 30px;
+	margin: -30px 10px 10px 30px;
 }
 
 .chart-legend {
