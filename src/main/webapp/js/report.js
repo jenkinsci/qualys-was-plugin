@@ -9,16 +9,19 @@ function showVulnsTable(scanResult){
 		 "dom": '<"vulns-table-top"l<"custom-filters">>rt<"vulns-table-bottom"ip><"clear">',
         "aaData": vulns,
         "aoColumns":[
-            { "mData": "WasScanVuln.qid", sDefaultContent :  '', "width": "8%"},
-            { "mData": "WasScanVuln.title", sDefaultContent :  '', "width": "35%"},
-            { "mData": "WasScanVuln.uri", sDefaultContent :  '', "width": "50%"},
-            { "mData": "WasScanVuln.instances", sDefaultContent :  '', "width": "10%"}
+            { "mData": "WasScanVuln.qid", sDefaultContent :  '', "width": "10%", "className": "dt-head-left"},
+            { "mData": "WasScanVuln.title", sDefaultContent :  '', "width": "30%", "className": "dt-head-left"},
+            { "mData": "WasScanVuln.severity", sDefaultContent :  '', "width": "10%", "className": "dt-head-left"},
+            { "mData": "WasScanVuln.uri", sDefaultContent :  '', "width": "40%", "className": "dt-head-left"},
+            { "mData": "WasScanVuln.instances", sDefaultContent :  '', "width": "10%", "className": "dt-head-left"}
+
         ],
         'aoColumnDefs': [
-        	{ "sTitle": "QID", "aTargets": [0]},
-            { "sTitle": "Title", "aTargets": [1] },    
-            { "sTitle": "URL", "aTargets": [2] },
-            { "sTitle": "Available Unauthenticated?", "aTargets": [3],
+        	{ "sTitle": "QID", "aTargets": [0], "className": "text-left"},
+            { "sTitle": "Title", "aTargets": [1], "className": "text-left" },    
+             { "sTitle": "Severity", "aTargets": [2],"className": "text-left" },    
+            { "sTitle": "URL", "aTargets": [3], "className": "text-left" },
+            { "sTitle": "Available Unauthenticated?", "aTargets": [4],"className": "text-left",
             	"render":  function ( data, type, row ) {
         			var list = data.list;
         			var auth = "No";
