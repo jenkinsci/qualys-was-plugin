@@ -9,19 +9,58 @@ function showVulnsTable(scanResult){
 		 "dom": '<"vulns-table-top"l<"custom-filters">>rt<"vulns-table-bottom"ip><"clear">',
         "aaData": vulns,
         "aoColumns":[
-            { "mData": "WasScanVuln.qid", sDefaultContent :  '', "width": "10%", "className": "dt-head-left"},
+            
+            { "mData": "WasScanVuln.qid", sDefaultContent :  '', "width": "7%", "className": "dt-head-left"},
+            { "mData": "WasScanVuln.severity", sDefaultContent :  '', "width": "2%"},
             { "mData": "WasScanVuln.title", sDefaultContent :  '', "width": "30%", "className": "dt-head-left"},
-            { "mData": "WasScanVuln.severity", sDefaultContent :  '', "width": "10%", "className": "dt-head-left"},
+            { "mData": "WasScanVuln.severity", sDefaultContent :  '', "width": "10%", "className": "center"},
             { "mData": "WasScanVuln.uri", sDefaultContent :  '', "width": "40%", "className": "dt-head-left"},
-            { "mData": "WasScanVuln.instances", sDefaultContent :  '', "width": "10%", "className": "dt-head-left"}
+            { "mData": "WasScanVuln.instances", sDefaultContent :  '', "width": "10%", "className": "center"}
 
         ],
         'aoColumnDefs': [
-        	{ "sTitle": "QID", "aTargets": [0], "className": "text-left"},
-            { "sTitle": "Title", "aTargets": [1], "className": "text-left" },    
-             { "sTitle": "Severity", "aTargets": [2],"className": "text-left" },    
-            { "sTitle": "URL", "aTargets": [3], "className": "text-left" },
-            { "sTitle": "Available Unauthenticated?", "aTargets": [4],"className": "text-left",
+            { "sTitle": "QID", "aTargets": [0], "className": "text-left"},
+        	{ "sTitle": "", "aTargets": [1],
+            	"render":  function ( data, type, row ) {
+        			var sev = parseInt(data);
+        			var reportObject = scanResult.evaluationResult;
+        			if(reportObject.severities)
+        			{
+						var severityObj = reportObject["severities"];
+						for(var i=1; i<6; i++)
+						{
+							if(severityObj[i])
+							{
+								if(severityObj[i].configured != null && severityObj[i].configured > -1 && severityObj[i].result != undefined && severityObj[i].result!= null)
+								{
+									if(sev==i && severityObj[i].result == false )
+									{
+										return '<img src="/plugin/qualys-was/images/fail.png" height="10" width="10"/>';
+
+									}
+
+								}
+							}
+						}
+    			    }
+    			    if(reportObject.qids)
+    			    {
+    			    	var configuredQids = reportObject["qids"].configured;
+    			    	if(configuredQids.length > 0)
+    			    	{
+    			    		if(configuredQids.indexOf(row.WasScanVuln.qid) != -1)
+    			    		{
+    			    			return '<img src="/plugin/qualys-was/images/fail.png" height="10" width="10"/>';
+    			    		}
+    			    	}
+    			    }
+            	}
+            },
+      
+            { "sTitle": "Title", "aTargets": [2], "className": "text-left" },    
+            { "sTitle": "Severity", "aTargets": [3],"className": "text-left" },    
+            { "sTitle": "URL", "aTargets": [4], "className": "text-left" },
+            { "sTitle": "Available Unauthenticated?", "aTargets": [5],"className": "text-left",
             	"render":  function ( data, type, row ) {
         			var list = data.list;
         			var auth = "No";
