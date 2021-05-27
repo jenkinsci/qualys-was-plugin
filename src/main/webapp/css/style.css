@@ -381,3 +381,91 @@
     height: 12px;
     margin-right: 5px;
 }
+
+.custom-filters-left{
+		margin-top: 5px;
+	}
+	
+.custom-filters label, .custom-filters span {
+		position: relative;
+    	top: -5px;
+    	cursor:pointer;
+	}
+	.filters-label {
+		float:left;
+		top: 0px !important;
+		font-weight:bold;
+		margin-right: 8px !important;
+	}
+
+.vulns-table-top {
+		display:table;
+		width:100%;
+		padding-bottom:20px;
+	}
+	
+	.vulns-table-top div:last-child {
+		float:right;
+	}
+	
+	.vulns-table-top div:first-child {
+		float:left;
+	}
+	
+	.vulns-table-top div {
+		clear:none !important;
+		padding: 5px 15px !important;
+	}
+	
+ul.filters-list {
+    list-style: none;
+    float: left;
+    margin: 0;
+    padding: 0;
+}
+
+ul.filters-list li {
+    float: left;
+    display: inline;
+    margin-left: 15px;
+}
+
+.custom-filter-checkbox {
+    -webkit-appearance: checkbox;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 5px;
+    border: 1px solid #555;
+}
+
+span.sev-filter-label {
+    margin-left: 20px;
+    position: relative;
+    top: 0px;
+}
+#excluded-items, #potential-checked{
+		width: 100%;
+		float: left;
+		font-style: italic;
+	}
+	
+.custom-filter-checkbox {
+		-webkit-appearance: checkbox;
+	    width: 20px;
+	    height: 20px;
+	    background: white;
+	    border-radius: 5px;
+	    border: 1px solid #555;
+}
+	
+.custom-filters label, .custom-filters span 
+{
+		position: relative;
+    	cursor:pointer;
+    	margin-right: 8px !important;
+}
+#reset
+{
+	margin-left: 50px;
+}

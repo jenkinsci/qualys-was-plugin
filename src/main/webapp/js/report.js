@@ -24,18 +24,18 @@ function showVulnsTable(scanResult){
             	"render":  function ( data, type, row ) {
         			var sev = parseInt(data);
         			var reportObject = scanResult.evaluationResult;
-        			if(reportObject.severities)
+        			if(reportObject && reportObject.severities)
         			{
 						var severityObj = reportObject["severities"];
 						for(var i=1; i<6; i++)
 						{
-							if(severityObj[i])
+							if(severityObj && severityObj[i])
 							{
 								if(severityObj[i].configured != null && severityObj[i].configured > -1 && severityObj[i].result != undefined && severityObj[i].result!= null)
 								{
 									if(sev==i && severityObj[i].result == false )
 									{
-										return '<img src="/plugin/qualys-was/images/fail.png" height="10" width="10"/>';
+										return '<img src="/plugin/qualys-was/images/fail.png" height="10" width="10"/><span style="display:none;">breaking</span>';
 
 									}
 
@@ -43,14 +43,15 @@ function showVulnsTable(scanResult){
 							}
 						}
     			    }
-    			    if(reportObject.qids)
+    			    if(reportObject && reportObject.qids)
     			    {
     			    	var configuredQids = reportObject["qids"].configured;
-    			    	if(configuredQids.length > 0)
+    			    	if(configuredQids && configuredQids.length > 0)
     			    	{
     			    		if(configuredQids.indexOf(row.WasScanVuln.qid) != -1)
     			    		{
-    			    			return '<img src="/plugin/qualys-was/images/fail.png" height="10" width="10"/>';
+    			    			return '<img src="/plugin/qualys-was/images/fail.png" height="10" width="10"/><span style="display:none;">breaking</span>';
+
     			    		}
     			    	}
     			    }
@@ -74,6 +75,47 @@ function showVulnsTable(scanResult){
             }
         ]
     });
+    
+    jQuery(".custom-filters").html(
+	    	'<div class="sev-filter-div">' + 
+	    	'<span class="filters-label">Show Only: </span>' + 
+	    	'<span class="sev-filter-label" >Severity </span>' + 
+	    	'<select class="severity-dropdown">' + 
+	    	'<option value="">All</option>' +
+	    	'<option value="5"> 5 </option>' +
+	    	'<option value="4"> 4 </option>' +
+	    	'<option value="3"> 3 </option>' +
+	    	'<option value="2"> 2 </option>' +
+	    	'<option value="1"> 1 </option>' +
+	    	'</select>' +
+	    	'</div>'+
+	    	'<ul class="filters-list">' +
+    		'<li><input class="custom-filter-checkbox" type="checkbox" id="breakingVulns" value="breakingVulns"><label for="breakingVulns" class="checkbox-title" > Breaking Vulnerabilities </li>' +
+    		'</ul>' +
+    		'<button type="button" id="reset" >Reset Filters</button>'
+	    );
+    
+     jQuery('.severity-dropdown').on('change', function(e){
+	    	 var optionSelected = jQuery("option:selected", this);
+			 var valueSelected = this.value;
+			 table.columns(3).search( valueSelected ).draw();
+	    });
+    
+     jQuery(".custom-filter-checkbox").on("change", function(e){
+		switch(this.value){	
+			case 'breakingVulns': 
+						var value = (this.checked)? 'breaking' : '';
+						table.columns(1).search( value ).draw();
+						break;
+		}
+	});
+    
+    $( "#reset" ).click(function() 
+	{
+  		$(".severity-dropdown").val('');
+  		$("#breakingVulns").prop("checked",false);
+  		table.search( '' ).columns().search( '' ).draw();
+	});
 }
 
 function showEvaluationSummary(scanResult){
