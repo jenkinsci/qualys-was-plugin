@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>2.11</version>
+    <version>4.13</version>
     <relativePath />
   </parent>
   <groupId>com.qualys.plugins</groupId>
@@ -14,7 +14,7 @@
   <packaging>hpi</packaging>
 
   <properties>
-	<jenkins.version>2.7.3</jenkins.version>
+	<jenkins.version>2.204.1</jenkins.version>
     <java.version>1.8</java.version>
     <java.level>8</java.level>
   </properties>
