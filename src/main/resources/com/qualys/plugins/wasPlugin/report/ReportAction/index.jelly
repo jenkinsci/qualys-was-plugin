@@ -193,6 +193,9 @@
 			<div id="vulnsTable-content">
 		  		<table id="vulnsTable" class="display" width="100%"></table>
 		  	</div>
+		  	<div id="summary-legend-div">
+				<div style="float:left; margin-left:10px;"> <div class="status-icon legend fail"> </div><span>-  Denotes the "Breaking Vulnerabilities" as per the configured fail criteria</span> </div>
+			</div>
 		</div>
 	
 	<script type="text/javascript">
