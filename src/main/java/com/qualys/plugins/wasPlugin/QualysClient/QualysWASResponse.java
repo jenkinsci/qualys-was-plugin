@@ -2,10 +2,10 @@ package com.qualys.plugins.wasPlugin.QualysClient;
 
 import com.google.gson.JsonObject;
 
-public class QualysCSResponse extends QualysAPIResponse{
+public class QualysWASResponse extends QualysAPIResponse{
     public JsonObject response;
 
-    public QualysCSResponse() {
+    public QualysWASResponse() {
         super();
         response = null;
     }

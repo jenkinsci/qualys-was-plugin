@@ -16,8 +16,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.qualys.plugins.wasPlugin.QualysAuth.QualysAuth;
-import com.qualys.plugins.wasPlugin.QualysClient.QualysCSClient;
-import com.qualys.plugins.wasPlugin.QualysClient.QualysCSResponse;
+import com.qualys.plugins.wasPlugin.QualysClient.QualysWASClient;
+import com.qualys.plugins.wasPlugin.QualysClient.QualysWASResponse;
 import com.qualys.plugins.wasPlugin.QualysCriteria.QualysCriteria;
 import com.qualys.plugins.wasPlugin.report.ReportAction;
 import com.qualys.plugins.wasPlugin.util.Helper;
@@ -58,7 +58,7 @@ public class WASScanLauncher{
     private boolean isFailConditionsConfigured;
     private JsonObject criteriaObject;
     
-    private QualysCSClient apiClient;
+    private QualysWASClient apiClient;
     private boolean failOnScanError;
     
     private final static Logger logger = Helper.getLogger(WASScanLauncher.class.getName());
@@ -105,7 +105,7 @@ public class WASScanLauncher{
         	//int proxyPortInt = Integer.parseInt(proxyPort);
         	auth.setProxyCredentials(proxyServer, proxyPort, proxyUsername, proxyPassword);
     	}
-    	this.apiClient = new QualysCSClient(auth, System.out);
+    	this.apiClient = new QualysWASClient(auth, System.out);
         
         this.pollingIntervalForVulns = setTimeoutInMinutes("pollingInterval", DEFAULT_POLLING_INTERVAL_FOR_VULNS, pollingIntervalStr, listener);
 		this.vulnsTimeout = setTimeoutInMinutes("vulnsTimeout", DEFAULT_TIMEOUT_FOR_VULNS, vulnsTimeoutStr, listener);
@@ -182,7 +182,7 @@ public class WASScanLauncher{
     		}
 		}
 		
-		String sevConfigured = "\nConfigured : ";
+		StringBuffer sevConfigured = new StringBuffer("\nConfigured : ");
 		String sevFound = "\nFound : ";
 		boolean severityFailed = false;
 		for(int i=1; i<=5; i++) {
@@ -191,7 +191,7 @@ public class WASScanLauncher{
     			JsonObject severity = sevObj.get(""+i).getAsJsonObject();
     			if(severity.has("configured") && !severity.get("configured").isJsonNull() && severity.get("configured").getAsInt() != -1) {
 	    			sevFound += "Severity "+ i +": "+ (severity.get("found").isJsonNull() ? 0 : severity.get("found").getAsString()) + ";";
-	    			sevConfigured += "Severity "+ i +">"+ severity.get("configured").getAsString() + ";";
+	    			sevConfigured.append("Severity "+ i +">"+ severity.get("configured").getAsString() + ";");
 		    		boolean sevPass = severity.get("result").getAsBoolean();
 		    		if(!sevPass) {
 		    			severityFailed = true;
@@ -268,7 +268,7 @@ public class WASScanLauncher{
 	
 	public JsonObject getScanResult(String scanId) {
 		JsonObject scanResult = null;
-		QualysCSResponse statusResponse = apiClient.getScanResult(scanId);
+		QualysWASResponse statusResponse = apiClient.getScanResult(scanId);
 		scanResult = statusResponse.response;
 		return scanResult;
 	}
@@ -276,7 +276,7 @@ public class WASScanLauncher{
 	public String getScanFinishedStatus(String scanId) {
 		String status = null;
 		try {
-			QualysCSResponse statusResponse = apiClient.getScanStatus(scanId);
+			QualysWASResponse statusResponse = apiClient.getScanStatus(scanId);
 			JsonObject result = statusResponse.response;
 			//logger.info("API RESPONSE : " + result.toString());
 			JsonElement respEl = result.get("ServiceResponse");
@@ -317,9 +317,8 @@ public class WASScanLauncher{
 	}
     
     public String launchScan() throws Exception {
-    	JsonObject result = new JsonObject();
+    	JsonObject result = null;;
     	JsonObject requestData = new JsonObject();
-    	String printLine = "Launching Qualys WAS scan with - ";
     	//required POST parameers - name, type, webappID
     	if(scanType == null || scanType.isEmpty() || scanType.equals("")) {
     		throw new AbortException("Scan Type - Required parameter to launch scan is missing.");
@@ -366,17 +365,6 @@ public class WASScanLauncher{
     		profRec.addProperty("id", optionProfileId);
     		wasScan.add("profile", profRec);
     	}
-    	else if(optionProfile != null && optionProfile.equals("useDefault")) {
-    		printLine += "OptionProfile:" + "Default";
-    	}
-    	
-    	/*
-    	//for Testing only
-	    	JsonObject tyR = new JsonObject();
-	    	tyR.addProperty("type", "EXTERNAL");
-	    	webapp.add("scannerAppliance", tyR);
-    	//remove above testing block
-    	*/
     	wasScan.add("target", webapp);
     	data.add("WasScan", wasScan);
     	requestObj.add("data", data);
@@ -399,7 +387,7 @@ public class WASScanLauncher{
     			listener.getLogger().println("Using Build Failure Conditions configuration: " + criteriaObject);
     		}
     		
-    		QualysCSResponse response = apiClient.launchWASScan(requestData);
+    		QualysWASResponse response = apiClient.launchWASScan(requestData);
     		result = response.response;
     		//parse result
     		JsonElement respEl = result.get("ServiceResponse");
@@ -429,10 +417,10 @@ public class WASScanLauncher{
     
     public Map<String, String> getWebappDetails(String id) throws Exception {
     	logger.info("Fetching web app details from server.");
-    	JsonObject result = new JsonObject();
+    	JsonObject result = null;
     	Map<String,String> webAppDetails = new HashMap<String, String>();
     	try {
-    		QualysCSResponse webAppDetialsResp = apiClient.getWebAppDetails(webAppId);
+    		QualysWASResponse webAppDetialsResp = apiClient.getWebAppDetails(webAppId);
     		result = webAppDetialsResp.response;
     		//logger.info("API RESPONSE : " + result.toString());
     		JsonElement respEl = result.get("ServiceResponse");

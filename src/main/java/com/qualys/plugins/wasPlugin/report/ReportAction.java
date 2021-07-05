@@ -10,8 +10,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.qualys.plugins.wasPlugin.QualysAuth.QualysAuth;
-import com.qualys.plugins.wasPlugin.QualysClient.QualysCSClient;
-import com.qualys.plugins.wasPlugin.QualysClient.QualysCSResponse;
+import com.qualys.plugins.wasPlugin.QualysClient.QualysWASClient;
+import com.qualys.plugins.wasPlugin.QualysClient.QualysWASResponse;
 import com.qualys.plugins.wasPlugin.util.Helper;
 
 import hudson.Extension;
@@ -105,8 +105,8 @@ public class ReportAction implements Action {
                 	//int proxyPortInt = Integer.parseInt(proxyPort);
                 	auth.setProxyCredentials(proxyServer, proxyPort, proxyUsername, proxyPassword.getPlainText());
             	}
-            	QualysCSClient qualysClient = new QualysCSClient(auth, System.out);
-	    		QualysCSResponse response = qualysClient.getScanResult(scanId);
+            	QualysWASClient qualysClient = new QualysWASClient(auth, System.out);
+	    		QualysWASResponse response = qualysClient.getScanResult(scanId);
 	    		respObj = response.response;
         	}
         	
@@ -279,7 +279,7 @@ public class ReportAction implements Action {
     
     public JSONObject parseScanStatus(String scanId) throws Exception {
     	JSONObject statusObj = new JSONObject();
-    	JsonObject result = new JsonObject();
+    	JsonObject result = null;
     	try {
     		QualysAuth auth = new QualysAuth();
         	auth.setQualysCredentials(apiServer, apiUser, apiPass.getPlainText());
@@ -287,8 +287,8 @@ public class ReportAction implements Action {
             	//int proxyPortInt = Integer.parseInt(proxyPort);
             	auth.setProxyCredentials(proxyServer, proxyPort, proxyUsername, proxyPassword.getPlainText());
         	}
-        	QualysCSClient qualysClient = new QualysCSClient(auth, System.out);
-    		QualysCSResponse resp = qualysClient.getScanDetails(scanId);
+        	QualysWASClient qualysClient = new QualysWASClient(auth, System.out);
+    		QualysWASResponse resp = qualysClient.getScanDetails(scanId);
     		result = resp.response;
     		JsonElement respEl = result.get("ServiceResponse");
    			JsonObject respObj = respEl.getAsJsonObject();

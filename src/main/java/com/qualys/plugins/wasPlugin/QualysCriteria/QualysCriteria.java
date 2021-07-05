@@ -92,7 +92,7 @@ public class QualysCriteria {
 				for (int i = 5; i >= 1; --i) {
 					JsonObject sevJson = new JsonObject();
 					if(this.severityMap.get(i).intValue() > -1) {
-						sevJson.addProperty("configured", this.severityMap.get(i).intValue());
+						sevJson.addProperty("configured", this.severityMap.get(i));
 						sevJson.add("found", null);
 						sevJson.addProperty("result", true);
 						sevConfigured.add(""+i, sevJson);
@@ -175,7 +175,7 @@ public class QualysCriteria {
 				JsonObject sevJson = new JsonObject();
 				//sys
 				if(this.severityMap.get(i).intValue() > -1) {
-					sevJson.addProperty("configured", this.severityMap.get(i).intValue());
+					sevJson.addProperty("configured", this.severityMap.get(i));
 				}else {
 					sevJson.add("configured", null);
 				}

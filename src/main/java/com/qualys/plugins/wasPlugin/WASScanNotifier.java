@@ -29,8 +29,8 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.qualys.plugins.wasPlugin.QualysAuth.QualysAuth;
-import com.qualys.plugins.wasPlugin.QualysClient.QualysCSClient;
-import com.qualys.plugins.wasPlugin.QualysClient.QualysCSResponse;
+import com.qualys.plugins.wasPlugin.QualysClient.QualysWASClient;
+import com.qualys.plugins.wasPlugin.QualysClient.QualysWASResponse;
 import com.qualys.plugins.wasPlugin.util.Helper;
 
 
@@ -441,9 +441,9 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
     
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-    	private final String URL_REGEX = "^(https)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
-        private final String PROXY_REGEX = "^((https?)://)?[-a-zA-Z0-9+&@#/%?=~_|!,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
-        private final String TIMEOUT_PERIOD_REGEX = "^(\\d+[*]?)*(?<!\\*)$";
+    	private static final String URL_REGEX = "^(https)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+        private static final String PROXY_REGEX = "^((https?)://)?[-a-zA-Z0-9+&@#/%?=~_|!,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+        private static final String TIMEOUT_PERIOD_REGEX = "^(\\d+[*]?)*(?<!\\*)$";
         
     	@Override
         public String getDisplayName() {
@@ -459,7 +459,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
         	if(string != null && !string.isEmpty()) {
 	        	try 
 	        	{
-	        	    byte[] bytes = string.getBytes("UTF-8");
+	        	    string.getBytes("UTF-8");
 	        	} 
 	        	catch (UnsupportedEncodingException e)
 	        	{
@@ -577,7 +577,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                     .withMatching(CredentialsMatchers.withId(proxyCredentialsId));
         }
         
-        public QualysCSClient getQualysClient(String apiServer, String credsId, boolean useProxy, String proxyServer,
+        public QualysWASClient getQualysClient(String apiServer, String credsId, boolean useProxy, String proxyServer,
         		String proxyPort, String proxyCredentialsId, Item item) {
         	String apiUser = "";
     		String apiPass = "";
@@ -615,7 +615,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
             		int proxyPortInt = (doCheckProxyPort(proxyPort)==FormValidation.ok()) ? Integer.parseInt(proxyPort) : 80;
                 	auth.setProxyCredentials(proxyServer, proxyPortInt, proxyUsername, proxyPassword);
             	}
-            	QualysCSClient client = new QualysCSClient(auth, System.out);
+            	QualysWASClient client = new QualysWASClient(auth, System.out);
             	return client;
     		}
     		return null;
@@ -672,8 +672,8 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
         	return model;
         }
         
-        public QualysCSResponse callAPIs(String api, QualysCSClient client, String id) {
-        	QualysCSResponse resp = null;
+        public QualysWASResponse callAPIs(String api, QualysWASClient client, String id) {
+        	QualysWASResponse resp = null;
         	String xmlReqData = id==null ? null : "<ServiceRequest> <filters> <Criteria field=\"id\" operator=\"GREATER\">" + id + "</Criteria> </filters> </ServiceRequest>";
         	
         	if(client != null) {
@@ -687,12 +687,15 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 				case "profileList":
 					resp = client.listOptionProfiles(xmlReqData);
 					break;
+				default:
+					logger.info("Invalid API call");
+					break;
 				}
         	}
 			return resp;
         }
         
-        public JsonArray getDataList(String api, QualysCSClient client) {
+        public JsonArray getDataList(String api, QualysWASClient client) {
         	boolean hasMoreRecords = true;
         	int page = 0;
         	String lastId = null;
@@ -702,10 +705,16 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
             		int retry = 0;
 	            	while(retry < 3) {
 	            		if(retry > 0 ) logger.info("Retrying "+ api + " call: " + retry);
-	        			QualysCSResponse resp = callAPIs(api, client, lastId);        			
-	        			retry ++;
-	        			
-	        			logger.info("Response code received for API "+ api + " call [page="+page+"]: " + resp.responseCode);
+	        			QualysWASResponse resp = callAPIs(api, client, lastId);        			
+	        			retry ++;	
+	        			if(resp != null)
+	        			{
+	        				logger.info("Response code received for API "+ api + " call [page="+page+"]: " + resp.responseCode);
+	        			}
+	        			else
+	        			{
+	        				logger.info("Response code not received for API "+ api + " call [page="+page+"]: ");
+	        			}
 	    				hasMoreRecords = false;
 	    				if(resp != null && resp.responseCode == 200) {
 		            		JsonObject response = resp.response;
@@ -745,7 +754,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                 		Map<String, String> platformObj = Helper.platformsList.get(platform);
                 		server = platformObj.get("url");
                 	}
-        			QualysCSClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
+        			QualysWASClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
 	        		logger.info("Fetching web applications list ... ");
 	        		JsonArray dataList = getDataList("webAppList", client);
 	        		for(JsonElement  webapp : dataList) {
@@ -763,7 +772,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
         		//return object;
         	}
         	
-        	model.sort(Helper.OptionItemmsComparator);
+        	model.sort(Helper.optionItemsComparator);
         	return model.withEmptySelection();
         }
         
@@ -781,7 +790,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                 		Map<String, String> platformObj = Helper.platformsList.get(platform);
                 		server = platformObj.get("url");
                 	}
-        			QualysCSClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
+        			QualysWASClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
 	        		logger.info("Fetching Auth Records list ... ");
 	        		JsonArray dataList = getDataList("authRecordList", client);
 	        		for(JsonElement  webapp : dataList) {
@@ -800,7 +809,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
         		e.printStackTrace();
         		//return object;
         	}
-        	model.sort(Helper.OptionItemmsComparator);
+        	model.sort(Helper.optionItemsComparator);
         	return model.withEmptySelection();
         }
         
@@ -818,7 +827,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                 		Map<String, String> platformObj = Helper.platformsList.get(platform);
                 		server = platformObj.get("url");
                 	}
-        			QualysCSClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
+        			QualysWASClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
 	        		logger.info("Fetching Option Profiles list ... ");
 	        		JsonArray dataList = getDataList("profileList", client);
 	        		for(JsonElement  webapp : dataList) {
@@ -836,7 +845,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
         		e.printStackTrace();
         		//return object;
         	}
-        	model.sort(Helper.OptionItemmsComparator);
+        	model.sort(Helper.optionItemsComparator);
         	return model.withEmptySelection();
         }
         
@@ -944,7 +953,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                     }
                 	auth.setProxyCredentials(proxyServer, proxyPortInt, proxyUsername, proxyPassword);
             	}
-            	QualysCSClient client = new QualysCSClient(auth, System.out);
+            	QualysWASClient client = new QualysWASClient(auth, System.out);
             	client.testConnection();
             	return FormValidation.ok("Connection test successful!");
                 
@@ -1102,14 +1111,19 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws AbortException {
     	listener.getLogger().println("Qualys Web App Scanning Connector - Started.");
     	Result r = build.getResult();
-        String result = r.toString();
+    	if(r == null)
+    	{
+    		listener.getLogger().println("Not able to fetch the build result, will not launch Qualys WAS scan.");
+    		return true;
+    	}
+    	String result = r.toString();
         if (result.equals("SUCCESS")) {
 	    	if (webAppId != null && !webAppId.isEmpty()) {
 	            try {
 	            	Item project = build.getProject();
 	            	launchWebAppScan(build, listener,  webAppId, project);
 	            } catch (Exception e) {
-	            	if(e.toString() == "java.lang.Exception") {
+	            	if(e.toString().equals("java.lang.Exception")) {
 	            		throw new AbortException("Exception in Qualys Vulnerabilities scan result. Finishing the build.");
 	            	} else if (e.getMessage().equalsIgnoreCase("sleep interrupted")) {
 	            		logger.log(Level.SEVERE, "Error: User Aborted");
@@ -1138,7 +1152,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
             	 Item project = run.getParent();
             	 launchWebAppScan(run, taskListener,  webAppId, project);
              } catch (Exception e) {
-            	 if(e.toString() == "java.lang.Exception") {
+            	 if(e.toString().equals("java.lang.Exception")) {
 	            		throw new AbortException("Exception in Qualys Vulnerabilities scan result. Finishing the build.");
 	            	} else if (e.getMessage().equalsIgnoreCase("sleep interrupted")) {
 	            		logger.log(Level.SEVERE, "Error: User Aborted");
@@ -1209,7 +1223,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
             }
         	auth.setProxyCredentials(proxyServer, proxyPort, proxyUsername, proxyPassword);
     	}
-    	QualysCSClient client = new QualysCSClient(auth, System.out);
+    	QualysWASClient client = new QualysWASClient(auth, System.out);
     	try {
     		listener.getLogger().println("Testing connection with Qualys API Server...");
     		client.testConnection();

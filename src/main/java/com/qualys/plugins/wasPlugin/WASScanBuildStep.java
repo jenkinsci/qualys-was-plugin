@@ -35,8 +35,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.qualys.plugins.wasPlugin.WASScanNotifier;
 import com.qualys.plugins.wasPlugin.QualysAuth.QualysAuth;
-import com.qualys.plugins.wasPlugin.QualysClient.QualysCSClient;
-import com.qualys.plugins.wasPlugin.QualysClient.QualysCSResponse;
+import com.qualys.plugins.wasPlugin.QualysClient.QualysWASClient;
+import com.qualys.plugins.wasPlugin.QualysClient.QualysWASResponse;
 
 import hudson.Extension;
 import hudson.FilePath;
@@ -448,9 +448,9 @@ public class WASScanBuildStep extends AbstractStepImpl {
     @Extension
     public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
        
-        private final String URL_REGEX = "^(https)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
-        private final String PROXY_REGEX = "^((https?)://)?[-a-zA-Z0-9+&@#/%?=~_|!,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
-        private final String TIMEOUT_PERIOD_REGEX = "^(\\d+[*]?)*(?<!\\*)$";
+        private static final String URL_REGEX = "^(https)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+        private static final String PROXY_REGEX = "^((https?)://)?[-a-zA-Z0-9+&@#/%?=~_|!,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+        private static final String TIMEOUT_PERIOD_REGEX = "^(\\d+[*]?)*(?<!\\*)$";
         
         public DescriptorImpl() {
             super(WASScanBuildExecution.class);
@@ -466,7 +466,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
         	if(string != null && !string.isEmpty()) {
 	        	try 
 	        	{
-	        	    byte[] bytes = string.getBytes("UTF-8");
+	        	    string.getBytes("UTF-8");
 	        	} 
 	        	catch (UnsupportedEncodingException e)
 	        	{
@@ -584,7 +584,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
                     .withMatching(CredentialsMatchers.withId(proxyCredentialsId));
         }
         
-        public QualysCSClient getQualysClient(String apiServer, String credsId, boolean useProxy, String proxyServer,
+        public QualysWASClient getQualysClient(String apiServer, String credsId, boolean useProxy, String proxyServer,
         		String proxyPort, String proxyCredentialsId, Item item) {
         	String apiUser = "";
     		String apiPass = "";
@@ -622,7 +622,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
             		int proxyPortInt = (doCheckProxyPort(proxyPort)==FormValidation.ok()) ? Integer.parseInt(proxyPort) : 80;
                 	auth.setProxyCredentials(proxyServer, proxyPortInt, proxyUsername, proxyPassword);
             	}
-            	QualysCSClient client = new QualysCSClient(auth, System.out);
+            	QualysWASClient client = new QualysWASClient(auth, System.out);
             	return client;
     		}
     		return null;
@@ -680,8 +680,8 @@ public class WASScanBuildStep extends AbstractStepImpl {
         	return model;
         }
         
-        public QualysCSResponse callAPIs(String api, QualysCSClient client, String id) {
-        	QualysCSResponse resp = null;
+        public QualysWASResponse callAPIs(String api, QualysWASClient client, String id) {
+        	QualysWASResponse resp = null;
         	String xmlReqData = id==null ? null : "<ServiceRequest> <filters> <Criteria field=\"id\" operator=\"GREATER\">" + id + "</Criteria> </filters> </ServiceRequest>";
         	if(client != null) {
 	        	switch(api) {
@@ -694,12 +694,15 @@ public class WASScanBuildStep extends AbstractStepImpl {
 				case "profileList":
 					resp = client.listOptionProfiles(xmlReqData);
 					break;
+				default:
+					logger.info("Invalid API call");
+					break;
 				}
         	}
 			return resp;
         }
         
-        public JsonArray getDataList(String api, QualysCSClient client) {
+        public JsonArray getDataList(String api, QualysWASClient client) {
         	boolean hasMoreRecords = true;
         	int page = 0;
         	String lastId = null;
@@ -709,10 +712,16 @@ public class WASScanBuildStep extends AbstractStepImpl {
             		int retry = 0;
 	            	while(retry < 3) {
 	            		if(retry > 0 ) logger.info("Retrying "+ api + " call: " + retry);
-	        			QualysCSResponse resp = callAPIs(api, client, lastId);        			
+	        			QualysWASResponse resp = callAPIs(api, client, lastId);        			
 	        			retry ++;
-	        			
-	        			logger.info("Response code received for API "+ api + " call [page="+page+"]: " + resp.responseCode);
+	        			if(resp != null)
+	        			{
+	        				logger.info("Response code received for API "+ api + " call [page="+page+"]: " + resp.responseCode);
+	        			}
+	        			else
+	        			{
+	        				logger.info("Response code not received for API "+ api + " call [page="+page+"]: ");
+	        			}
 	    				hasMoreRecords = false;
 	    				if(resp != null && resp.responseCode == 200) {
 		            		JsonObject response = resp.response;
@@ -752,7 +761,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
                 		Map<String, String> platformObj = Helper.platformsList.get(platform);
                 		server = platformObj.get("url");
                 	}
-        			QualysCSClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
+        			QualysWASClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
 	        		logger.info("Fetching web applications list ... ");
 	        		JsonArray dataList = getDataList("webAppList", client);
 	        		for(JsonElement  webapp : dataList) {
@@ -770,7 +779,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
         		//return object;
         	}
         	
-        	model.sort(Helper.OptionItemmsComparator);
+        	model.sort(Helper.optionItemsComparator);
         	return model.withEmptySelection();
         }
         
@@ -788,7 +797,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
                 		Map<String, String> platformObj = Helper.platformsList.get(platform);
                 		server = platformObj.get("url");
                 	}
-        			QualysCSClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
+        			QualysWASClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
 	        		logger.info("Fetching Auth Records list ... ");
 	        		JsonArray dataList = getDataList("authRecordList", client);
 	        		for(JsonElement  webapp : dataList) {
@@ -807,7 +816,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
         		e.printStackTrace();
         		//return object;
         	}
-        	model.sort(Helper.OptionItemmsComparator);
+        	model.sort(Helper.optionItemsComparator);
         	return model.withEmptySelection();
         }
         
@@ -825,7 +834,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
                 		Map<String, String> platformObj = Helper.platformsList.get(platform);
                 		server = platformObj.get("url");
                 	}
-        			QualysCSClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
+        			QualysWASClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
 	        		logger.info("Fetching Option Profiles list ... ");
 	        		JsonArray dataList = getDataList("profileList", client);
 	        		for(JsonElement  webapp : dataList) {
@@ -843,7 +852,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
         		e.printStackTrace();
         		//return object;
         	}
-        	model.sort(Helper.OptionItemmsComparator);
+        	model.sort(Helper.optionItemsComparator);
         	return model.withEmptySelection();
         }
         
@@ -950,7 +959,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
                     }
                 	auth.setProxyCredentials(proxyServer, proxyPortInt, proxyUsername, proxyPassword);
             	}
-            	QualysCSClient client = new QualysCSClient(auth, System.out);
+            	QualysWASClient client = new QualysWASClient(auth, System.out);
             	client.testConnection();
             	return FormValidation.ok("Connection test successful!");
                 

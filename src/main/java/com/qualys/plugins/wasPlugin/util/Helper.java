@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -167,7 +168,7 @@ public class Helper {
     
     public static class QualysLogFormatter extends Formatter {
         // Create a DateFormat to format the logger timestamp.
-        private static final DateFormat df = new SimpleDateFormat("MMM dd, yyyy hh:mm:ss a");
+        private final DateFormat df = new SimpleDateFormat("MMM dd, yyyy hh:mm:ss a");
 
         public String format(LogRecord record) {
             StringBuilder builder = new StringBuilder(1000);
@@ -189,11 +190,18 @@ public class Helper {
         }
     }
 
-	public static void createNewFile(String rootDir, String filename, String content, PrintStream buildLogger) {
+	public static void createNewFile(String rootDir, String filename, String content, PrintStream buildLogger) throws UnsupportedEncodingException {
   	  	   	
     	File f = new File(rootDir + File.separator + filename + ".json");
 	    if(!f.getParentFile().exists()){
-	        f.getParentFile().mkdirs();
+	    	try
+	    	{
+	    		f.getParentFile().mkdirs();
+	    	}
+	    	catch(Exception e)
+	    	{
+	    		 buildLogger.println("Failed creating directory " + rootDir + ", reason =" + e.getMessage());
+	    	}
 	    }
 
 	    if(!f.exists()){
@@ -206,7 +214,7 @@ public class Helper {
 	    }
 	    try {
 	        File dir = new File(f.getParentFile(), f.getName());
-	        PrintWriter writer = new PrintWriter(dir);
+	        PrintWriter writer = new PrintWriter(dir, "UTF-8");
 	        writer.print(content);
 	        writer.close();
 	    } catch (FileNotFoundException e) {
@@ -215,7 +223,7 @@ public class Helper {
 	    }
     }
 	
-	public static Comparator<Option> OptionItemmsComparator = new Comparator<Option>() {
+	public static final Comparator<Option> optionItemsComparator = new Comparator<Option>() {
         @Override
         public int compare(Option e1, Option e2) {
             return e1.name.toLowerCase().compareTo(e2.name.toLowerCase());
@@ -239,7 +247,7 @@ public class Helper {
     		String final_content = gson.toJson(respObj);
     		try {
     	        File dir = new File(f.getParentFile(), f.getName());
-    	        PrintWriter writer = new PrintWriter(dir);
+    	        PrintWriter writer = new PrintWriter(dir, "UTF-8");
     	        writer.print(final_content);
     	        writer.close();
     	    } catch (FileNotFoundException e) {

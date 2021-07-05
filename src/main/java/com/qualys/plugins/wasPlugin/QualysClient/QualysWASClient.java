@@ -21,16 +21,16 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
-public class QualysCSClient extends QualysBaseClient {
+public class QualysWASClient extends QualysBaseClient {
     HashMap<String, String> apiMap;
-    Logger logger = Logger.getLogger(QualysCSClient.class.getName());
+    Logger logger = Logger.getLogger(QualysWASClient.class.getName());
 
-    public QualysCSClient(QualysAuth auth) {
+    public QualysWASClient(QualysAuth auth) {
         super(auth, System.out);
         this.populateApiMap();
     }
 
-    public QualysCSClient(QualysAuth auth, PrintStream stream) {
+    public QualysWASClient(QualysAuth auth, PrintStream stream) {
         super(auth, stream);
         this.populateApiMap();
     }
@@ -48,45 +48,45 @@ public class QualysCSClient extends QualysBaseClient {
         this.apiMap.put("listAuthRecords", "/qps/rest/3.0/search/was/webappauthrecord/");
     }
 
-    public QualysCSResponse getScanResult(String scanId) {
+    public QualysWASResponse getScanResult(String scanId) {
         return this.get(this.apiMap.get("getScanResult") + scanId);
     }
     
-    public QualysCSResponse getScanDetails(String scanId) {
+    public QualysWASResponse getScanDetails(String scanId) {
         return this.get(this.apiMap.get("getScanDetails") + scanId);
     }
     
-    public QualysCSResponse getWebAppCount() {
+    public QualysWASResponse getWebAppCount() {
         return this.get(this.apiMap.get("getWebAppCount"));
     }
     
-    public QualysCSResponse getScanStatus(String scanId) {
+    public QualysWASResponse getScanStatus(String scanId) {
         return this.get(this.apiMap.get("getScanStatus") + scanId);
     }
     
-    public QualysCSResponse launchWASScan(JsonObject requestData) {
+    public QualysWASResponse launchWASScan(JsonObject requestData) {
         return this.post(this.apiMap.get("launchScan"), requestData, null);
     }
     
-    public QualysCSResponse getWebAppDetails(String webappId) {
+    public QualysWASResponse getWebAppDetails(String webappId) {
         return this.get(this.apiMap.get("getWebAppDetails") + webappId);
     }
     
-    public QualysCSResponse listWebApps(String xml) {
+    public QualysWASResponse listWebApps(String xml) {
         return this.post(this.apiMap.get("listWebApps"), null, xml);
     }
     
-    public QualysCSResponse listOptionProfiles(String xml) {
+    public QualysWASResponse listOptionProfiles(String xml) {
         return this.post(this.apiMap.get("listOptionProfiles"), null, xml);
     }
     
-    public QualysCSResponse listAuthRecords(String xml) {
+    public QualysWASResponse listAuthRecords(String xml) {
         return this.post(this.apiMap.get("listAuthRecords"), null, xml);
     }
 
     public void testConnection() throws Exception{
     	try {
-    		QualysCSResponse response = getWebAppCount();
+    		QualysWASResponse response = getWebAppCount();
     		if(response.errored) {
     			if(response.responseCode > 0)
     				throw new Exception("Please provide valid API and/or Proxy details." + " Server returned with Response code: " +response.responseCode);
@@ -116,9 +116,9 @@ public class QualysCSClient extends QualysBaseClient {
     	}
     }
     
-    private QualysCSResponse get(String apiPath) {
-        QualysCSResponse apiResponse = new QualysCSResponse();
-        String apiResponseString = "";
+    private QualysWASResponse get(String apiPath) {
+        QualysWASResponse apiResponse = new QualysWASResponse();
+        StringBuffer apiResponseString = new StringBuffer();
         CloseableHttpClient httpclient = null;
         
         try {
@@ -133,15 +133,17 @@ public class QualysCSClient extends QualysBaseClient {
         	apiResponse.responseCode = response.getStatusLine().getStatusCode();
         	logger.info("Server returned with ResponseCode: "+ apiResponse.responseCode);
         	if(response.getEntity()!=null) {
-	            BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+	            BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent(),"UTF-8"));
 	            String output;
 	            while ((output = br.readLine()) != null) {
-	                apiResponseString += output;
+	                apiResponseString.append(output);
 	            }
+		        
+	            br.close();
 	            //httpclient.getConnectionManager().shutdown();
 	
 	            JsonParser jsonParser = new JsonParser();
-	            JsonElement jsonTree = jsonParser.parse(apiResponseString);
+	            JsonElement jsonTree = jsonParser.parse(apiResponseString.toString());
 	            if (!jsonTree.isJsonObject()) {
 	                throw new InvalidAPIResponseException();
 	            }	  
@@ -150,7 +152,7 @@ public class QualysCSClient extends QualysBaseClient {
             
         }catch (JsonParseException je) {
 			apiResponse.errored = true;
-            apiResponse.errorMessage = apiResponseString;
+            apiResponse.errorMessage = apiResponseString.toString();
 		} catch (Exception e) {
             apiResponse.errored = true;
             apiResponse.errorMessage = e.getMessage();
@@ -159,9 +161,9 @@ public class QualysCSClient extends QualysBaseClient {
         return apiResponse;
     }
     
-    private QualysCSResponse post(String apiPath, JsonObject requestDataJson, String requestXmlString) {
-    	QualysCSResponse apiResponse = new QualysCSResponse();
-        String apiResponseString = "";
+    private QualysWASResponse post(String apiPath, JsonObject requestDataJson, String requestXmlString) {
+    	QualysWASResponse apiResponse = new QualysWASResponse();
+    	StringBuffer apiResponseString = new StringBuffer();
         CloseableHttpClient httpclient = null;
         
         try {
@@ -186,15 +188,15 @@ public class QualysCSClient extends QualysBaseClient {
         	apiResponse.responseCode = response.getStatusLine().getStatusCode();
         	logger.info("Server returned with ResponseCode: "+ apiResponse.responseCode);
         	if(response.getEntity()!=null) {
-	            BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+        		BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent(),"UTF-8"));
 	            String output;
 	            while ((output = br.readLine()) != null) {
-	                apiResponseString += output;
+	            	apiResponseString.append(output);
 	            }
 	            //httpclient.getConnectionManager().shutdown();
-	
+	            br.close();
 	            JsonParser jsonParser = new JsonParser();
-	            JsonElement jsonTree = jsonParser.parse(apiResponseString);
+	            JsonElement jsonTree = jsonParser.parse(apiResponseString.toString());
 	            if (!jsonTree.isJsonObject()) {
 	                throw new InvalidAPIResponseException();
 	            }	  
@@ -203,7 +205,7 @@ public class QualysCSClient extends QualysBaseClient {
             
         }catch (JsonParseException je) {
 			apiResponse.errored = true;
-            apiResponse.errorMessage = apiResponseString;
+			apiResponse.errorMessage = apiResponseString.toString();
 		} catch (Exception e) {
             apiResponse.errored = true;
             apiResponse.errorMessage = e.getMessage();
