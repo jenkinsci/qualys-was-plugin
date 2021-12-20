@@ -257,15 +257,21 @@
 		    xHrsTr.style.display = 'none';
 		    
 			apiServerTr.style.display = 'none';
-			apiServerTr.next('tr').style.display = 'none';
+			if (apiServerTr.next('tr')) {
+				apiServerTr.next('tr').style.display = 'none';
+			}
 			
 			document.getElementById("platform").onchange = function(){
 				if(this.value === "PCP"){
 					apiServerTr.style.display = 'table-row';
-					apiServerTr.next('tr').style.display = 'table-row';
+					if (apiServerTr.next('tr')) {
+						apiServerTr.next('tr').style.display = 'table-row';
+					}
 				}else{
 					apiServerTr.style.display = 'none';
-					apiServerTr.next('tr').style.display = 'none';
+					if (apiServerTr.next('tr')) {
+						apiServerTr.next('tr').style.display = 'none';
+					}
 				}
 			}
 			
@@ -280,19 +286,27 @@
 			document.getElementById("optionProfile").onchange = function(){
 				if(this.value === "other"){
 					otherOptionTr.style.display = 'table-row';
-					otherOptionTr.next().style.display='table-row';
+					if (otherOptionTr.next()) {
+						otherOptionTr.next().style.display='table-row';
+					}
 				}else{
 					otherOptionTr.style.display = 'none';
-					otherOptionTr.next().style.display='none';
+					if (otherOptionTr.next()) {
+						otherOptionTr.next().style.display='none';
+					}
 				}
 			}
 			document.getElementById("authRecord").onchange = function(){
 				if(this.value === "other"){
 					otherAuthTr.style.display = 'table-row';
-					otherAuthTr.next().style.display='table-row';
+					if (otherAuthTr.next()) {
+						otherAuthTr.next().style.display='table-row';
+					}
 				}else{
 					otherAuthTr.style.display = 'none';
-					otherAuthTr.next().style.display='none';
+					if (otherAuthTr.next()) {
+						otherAuthTr.next().style.display='none';
+					}
 				}
 			}
 			document.getElementById("cancelOptions").onchange = function(){
