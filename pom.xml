@@ -14,7 +14,7 @@
   <packaging>hpi</packaging>
 
   <properties>
-	<jenkins.version>2.222.4</jenkins.version>
+	<jenkins.version>2.289.3</jenkins.version>
     <java.version>1.8</java.version>
     <java.level>8</java.level>
   </properties>
@@ -78,7 +78,7 @@
 	  <dependency>
 	    <groupId>org.jenkins-ci.plugins.workflow</groupId>
 	    <artifactId>workflow-step-api</artifactId>
-	    <version>622.vb_8e7c15b_c95a_</version>
+          <version>639.v6eca_cd8c04a_a_</version>
 	  </dependency>
 	  <dependency>
 	      <groupId>org.jenkins-ci.plugins</groupId>
