@@ -19,7 +19,7 @@
 </l:side-panel>
  
 <l:main-panel>
-	<script type="text/javascript" src="${resURL}/plugin/qualys-was/js/jquery-3.4.1.min.js"></script>
+	<script type="text/javascript" src="${resURL}/plugin/qualys-was/js/jquery-3.5.0.min.js"></script>
 	 <script type="text/javascript" src="${resURL}/plugin/qualys-was/datatable/js/jquery.dataTables.min.js"></script>
 	 <script type="text/javascript" src="${resURL}/plugin/qualys-was/js/report.js"></script>
 	 <script type="text/javascript" src="${resURL}/plugin/qualys-was/js/chart-3.2.1.min.js"></script>
