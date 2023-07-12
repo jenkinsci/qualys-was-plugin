@@ -107,14 +107,23 @@
 
 			if(document.getElementById("platform").value == "PCP"){
 		    	apiServerTr.style.display = 'table-row';
+		    	if (apiServerTr.nextElementSibling()) {
+					apiServerTr.nextElementSibling().style.display='table-row';
+				}
 		    }
 
 		    if(document.getElementById("optionProfile").value == "other"){
 		    	otherOptionTr.style.display = 'table-row';
+		    	if (otherOptionTr.nextElementSibling()) {
+					otherOptionTr.nextElementSibling().style.display='table-row';
+				}
 		    }
 
 		    if(document.getElementById("authRecord").value == "other"){
 		    	otherAuthTr.style.display = 'table-row';
+		    	if (otherAuthTr.nextElementSibling()) {
+					otherAuthTr.nextElementSibling().style.display='table-row';
+				}
 		    }
 
 		    if(document.getElementById("cancelOptions").value == "xhours"){
@@ -124,8 +133,14 @@
 			document.getElementById("optionProfile").onchange = function(){
 				if(this.value === "other"){
 					otherOptionTr.style.display = 'table-row';
+					if (otherOptionTr.nextElementSibling()) {
+						otherOptionTr.nextElementSibling().style.display='table-row';
+					}
 				}else{
 					otherOptionTr.style.display = 'none';
+					if (otherOptionTr.nextElementSibling()) {
+						otherOptionTr.nextElementSibling().style.display='none';
+					}
 				}
 			}
 			document.getElementById("authRecord").onchange = function(){
@@ -133,10 +148,14 @@
 					//document.getElementById("otherAuth").value = "";
 					//document.getElementById("authInfoMessage").innerHTML = "";
 					otherAuthTr.style.display = 'table-row';
-
+					if (otherAuthTr.nextElementSibling()) {
+						otherAuthTr.nextElementSibling().style.display='table-row';
+					}
 				}else{
 					otherAuthTr.style.display = 'none';
-
+					if (otherAuthTr.nextElementSibling()) {
+						otherAuthTr.nextElementSibling().style.display='none';
+					}
 				}
 			}
 			document.getElementById("cancelOptions").onchange = function(){
@@ -168,24 +187,29 @@
 					"useProxy": useProxy
 				};
 
-                fetch(checkUrl + 'getWebAppList' + "?" + new URLSearchParams(params), {
-		        method: 'POST',
-                headers: crumb.wrap({ 'Content-Type': 'application/x-www-form-urlencoded'})
-                }).then((rsp) => {
+           fetch(checkUrl + 'getWebAppList' + "?" + new URLSearchParams(params), {
+		   method: "POST",
+           headers: crumb.wrap({
+		   "Content-Type": "application/x-www-form-urlencoded",
+           })
+           }).then((rsp) => {
 				      	  updateDropdowns(rsp, 'webapp');
 				  });
-
-               fetch(checkUrl + 'getAuthRecordList' + "?" + new URLSearchParams(params), {
-               method 'POST',
-               headers: crumb.wrap({ 'Content-Type': 'application/x-www-form-urlencoded'})
-               }).then((rsp) => {
+          fetch(checkUrl + 'getAuthRecordList' + "?" + new URLSearchParams(params), {
+          method: "POST",
+          headers: crumb.wrap({
+          "Content-Type": "application/x-www-form-urlencoded",
+          })
+          }).then((rsp) => {
 				      	  updateDropdowns(rsp, 'authRecord');
 				  });
 
-              fetch(checkUrl + 'getOptionProfileList' + "?" + new URLSearchParams(params), {
-              method: 'POST',
-              headers: crumb.wrap({ 'Content-Type': 'application/x-www-form-urlencoded'})
-              }).then((rsp) => {
+          fetch(checkUrl + 'getOptionProfileList' + "?" + new URLSearchParams(params), {
+          method: "POST",
+          headers: crumb.wrap({
+          "Content-Type": "application/x-www-form-urlencoded",
+          })
+          }).then((rsp) => {
 				      	  updateDropdowns(rsp, 'optionProfile');
 				  });
 			}
