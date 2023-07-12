@@ -71,59 +71,27 @@
 
 		    apiServerTr.style.display = 'none';
 			//apiServerTr.previous('tr').style.display = 'none';
-		    var apiServerNextTr = apiServerTr.nextElementSibling;
-		    while (apiServerNextTr &amp;&amp; apiServerNextTr.nodeName !== 'TR') {
-		          apiServerNextTr = apiServerNextTr.nextElementSibling;
-	      	            }
-		   if (apiServerNextTr) {
-						apiServerNextTr.style.display = 'none';
-		                apiServerTr=apiServerNextTr;
-		                }
+
 			document.getElementById("platform").onchange = function(){
 				if(this.value === "PCP"){
 					apiServerTr.style.display = 'table-row';
 					//apiServerTr.previous('tr').style.display = 'table-row';
-		            var apiServerPlatformNextTr = apiServerTr.nextElementSibling;
-		            while (apiServerPlatformNextTr &amp;&amp; apiServerPlatformNextTr.nodeName !== 'TR') {
-								apiServerPlatformNextTr = apiServerPlatformNextTr.nextElementSibling;
-						        }
-		            if (apiServerPlatformNextTr) {
-								apiServerPlatformNextTr.style.display = 'table-row';
-		                        apiServerTr=apiServerPlatformNextTr;
-		                        }
-		         }else{
+				}else{
 					apiServerTr.style.display = 'none';
 					//apiServerTr.previous('tr').style.display = 'none';
-		            var apiServerPlatformNextTr = apiServerTr.nextElementSibling;
-		            while (apiServerPlatformNextTr &amp;&amp; apiServerPlatformNextTr.nodeName !== 'TR') {
-        						apiServerPlatformNextTr = apiServerPlatformNextTr.nextElementSibling;
-        					}
-		            if (apiServerPlatformNextTr) {
-        						apiServerPlatformNextTr.style.display = 'none';
-		                        apiServerTr=apiServerPlatformNextTr;
-                           }
-				  }
+				}
 			}
 
 			if(document.getElementById("platform").value == "PCP"){
 		    	apiServerTr.style.display = 'table-row';
-		    	if (apiServerTr.nextElementSibling()) {
-					apiServerTr.nextElementSibling().style.display='table-row';
-				}
 		    }
 
 		    if(document.getElementById("optionProfile").value == "other"){
 		    	otherOptionTr.style.display = 'table-row';
-		    	if (otherOptionTr.nextElementSibling()) {
-					otherOptionTr.nextElementSibling().style.display='table-row';
-				}
 		    }
 
 		    if(document.getElementById("authRecord").value == "other"){
 		    	otherAuthTr.style.display = 'table-row';
-		    	if (otherAuthTr.nextElementSibling()) {
-					otherAuthTr.nextElementSibling().style.display='table-row';
-				}
 		    }
 
 		    if(document.getElementById("cancelOptions").value == "xhours"){
@@ -133,14 +101,8 @@
 			document.getElementById("optionProfile").onchange = function(){
 				if(this.value === "other"){
 					otherOptionTr.style.display = 'table-row';
-					if (otherOptionTr.nextElementSibling()) {
-						otherOptionTr.nextElementSibling().style.display='table-row';
-					}
 				}else{
 					otherOptionTr.style.display = 'none';
-					if (otherOptionTr.nextElementSibling()) {
-						otherOptionTr.nextElementSibling().style.display='none';
-					}
 				}
 			}
 			document.getElementById("authRecord").onchange = function(){
@@ -148,14 +110,10 @@
 					//document.getElementById("otherAuth").value = "";
 					//document.getElementById("authInfoMessage").innerHTML = "";
 					otherAuthTr.style.display = 'table-row';
-					if (otherAuthTr.nextElementSibling()) {
-						otherAuthTr.nextElementSibling().style.display='table-row';
-					}
+
 				}else{
 					otherAuthTr.style.display = 'none';
-					if (otherAuthTr.nextElementSibling()) {
-						otherAuthTr.nextElementSibling().style.display='none';
-					}
+
 				}
 			}
 			document.getElementById("cancelOptions").onchange = function(){
