@@ -199,8 +199,8 @@
 		</div>
 	
 	<script type="text/javascript">
-		jQuery("#vulnerabilities").hide();
-		
+		jQuery("#vulnerabilities").css("display","none");
+
 		var myAction= <st:bind value="${it}" />
 		var spinner = document.getElementById("statusSpinner");
 		var refreshLink = document.getElementById("refresh_status");
@@ -224,13 +224,13 @@
 			if(!selected) {
 				jQuery(".left-pill-item").removeClass("selected");
 				window.scrollTo(0, 0);
-				jQuery(".reports-main-content").hide();
+				jQuery(".reports-main-content").css("display","none");
 				jQuery(this).addClass("selected");
 				if(jQuery(this).hasClass("vulns")){
-					jQuery("#vulnerabilities").show();
+					jQuery("#vulnerabilities").css("display","block");
 				}
 				if(jQuery(this).hasClass("summary")){
-					jQuery("#build-summary").show();
+					jQuery("#build-summary").css("display","block");
 				}
 			}
 		});

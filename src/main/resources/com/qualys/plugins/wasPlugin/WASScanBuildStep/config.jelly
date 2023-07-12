@@ -255,26 +255,40 @@
 		    otherOptionTr.style.display = 'none';
 		    otherAuthTr.style.display = 'none';
 		    xHrsTr.style.display = 'none';
-		    
+
 			apiServerTr.style.display = 'none';
-			if (apiServerTr.next('tr')) {
-				apiServerTr.next('tr').style.display = 'none';
-			}
-			
+		    var apiServerNextTr = apiServerTr.nextElementSibling;
+		    while (apiServerNextTr &amp;&amp; apiServerNextTr.nodeName != 'TR') {
+					apiServerNextTr = apiServerNextTr.nextElementSibling;
+					}
+		    if (apiServerNextTr) {
+						apiServerNextTr.style.display = 'none';
+		                apiServerTr=apiServerNextTr;
+		            }
 			document.getElementById("platform").onchange = function(){
 				if(this.value === "PCP"){
 					apiServerTr.style.display = 'table-row';
-					if (apiServerTr.next('tr')) {
-						apiServerTr.next('tr').style.display = 'table-row';
-					}
+		            var apiServerPlatformNextTr = apiServerTr.nextElementSibling;
+		            while (apiServerPlatformNextTr  &amp;&amp; apiServerPlatformNextTr.nodeName !== 'TR') {
+								apiServerPlatformNextTr = apiServerPlatformNextTr.nextElementSibling;
+							}
+		            if (apiServerPlatformNextTr) {
+								apiServerPlatformNextTr.style.display = 'table-row';
+		                        apiServerTr=apiServerPlatformNextTr;
+		                    }
 				}else{
 					apiServerTr.style.display = 'none';
-					if (apiServerTr.next('tr')) {
-						apiServerTr.next('tr').style.display = 'none';
-					}
-				}
+		            var apiServerPlatformNextTr = apiServerTr.nextElementSibling;
+		            while (apiServerPlatformNextTr  &amp;&amp; apiServerPlatformNextTr.nodeName !== 'TR') {
+								 apiServerPlatformNextTr = apiServerPlatformNextTr.nextElementSibling;
+		                    }
+		            if (apiServerPlatformNextTr) {
+								apiServerPlatformNextTr.style.display = 'none';
+		                        apiServerTr=apiServerPlatformNextTr;
+		                    }
+				      }
 			}
-			
+
 			for(i=1; i &lt; 25; i++){
 				var option = document.createElement("option");
 				option.text = i;
@@ -282,30 +296,30 @@
 				var select = document.getElementById("cancelHours");
 				select.appendChild(option);
 			}
-			
+
 			document.getElementById("optionProfile").onchange = function(){
 				if(this.value === "other"){
 					otherOptionTr.style.display = 'table-row';
-					if (otherOptionTr.next()) {
-						otherOptionTr.next().style.display='table-row';
-					}
+						if (otherOptionTr.nextElementSibling) {
+							otherOptionTr.nextElementSibling.style.display='table-row';
+		                    }
 				}else{
 					otherOptionTr.style.display = 'none';
-					if (otherOptionTr.next()) {
-						otherOptionTr.next().style.display='none';
+					if (otherOptionTr.nextElementSibling()) {
+						otherOptionTr.nextElementSibling().style.display='none';
 					}
 				}
 			}
 			document.getElementById("authRecord").onchange = function(){
 				if(this.value === "other"){
 					otherAuthTr.style.display = 'table-row';
-					if (otherAuthTr.next()) {
-						otherAuthTr.next().style.display='table-row';
+					if (otherAuthTr.nextElementSibling()) {
+						otherAuthTr.nextElementSibling().style.display='table-row';
 					}
 				}else{
 					otherAuthTr.style.display = 'none';
-					if (otherAuthTr.next()) {
-						otherAuthTr.next().style.display='none';
+					if (otherAuthTr.nextElementSibling()) {
+						otherAuthTr.nextElementSibling().style.display='none';
 					}
 				}
 			}
@@ -315,8 +329,8 @@
 				else
 					xHrsTr.style.display = 'none';
 			}
-			
-		
+
+
 		for(i=1; i &lt; 25; i++){
 			var option = document.createElement("option");
 			option.text = i;
@@ -324,7 +338,7 @@
 			var select = document.getElementById("cancelHours");
 			select.appendChild(option);
 		}
-		
+
 	</script>
 	
     

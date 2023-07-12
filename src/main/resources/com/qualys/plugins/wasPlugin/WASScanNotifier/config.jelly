@@ -20,7 +20,7 @@
     	.extraInput {
     		padding-left:15%;
     	}
-    	
+
     	#webInfoMessage{
     		font-size: 0.9em !important;
     		padding: 0 0 1em 1em;
@@ -49,14 +49,14 @@
     		 margin-bottom: -20px;
     		 margin-top: 10px;
     	}
-    	
+
     	#severityTitle{
     		margin-bottom: -36px;
     	}
     	#qidSevSection.severityBlock{
     		margin-left: -125px !important;
     	}
-    	
+
     </style>
     <script type="text/javascript">
     	function docReady1() {
@@ -64,69 +64,68 @@
 		    var otherOptionTr = document.getElementsByName("_.optionProfileId")[0].parentNode.parentNode;
 		    var xHrsTr = document.getElementsByName("_.cancelHours")[0].parentNode.parentNode;
 		    var apiServerTr = document.getElementsByName("_.apiServer")[0].parentNode.parentNode;
-		    
+
 		    otherOptionTr.style.display = 'none';
 		    otherAuthTr.style.display = 'none';
 		    xHrsTr.style.display = 'none';
-		    
+
 		    apiServerTr.style.display = 'none';
 			//apiServerTr.previous('tr').style.display = 'none';
-			if (apiServerTr.next('tr')) {
-				apiServerTr.next('tr').style.display = 'none';
-			}
-			
+		    var apiServerNextTr = apiServerTr.nextElementSibling;
+		    while (apiServerNextTr &amp;&amp; apiServerNextTr.nodeName !== 'TR') {
+		          apiServerNextTr = apiServerNextTr.nextElementSibling;
+	      	            }
+		   if (apiServerNextTr) {
+						apiServerNextTr.style.display = 'none';
+		                apiServerTr=apiServerNextTr;
+		                }
 			document.getElementById("platform").onchange = function(){
 				if(this.value === "PCP"){
 					apiServerTr.style.display = 'table-row';
 					//apiServerTr.previous('tr').style.display = 'table-row';
-					if (apiServerTr.next('tr')) {
-						apiServerTr.next('tr').style.display = 'table-row';
-					}
-				}else{
+		            var apiServerPlatformNextTr = apiServerTr.nextElementSibling;
+		            while (apiServerPlatformNextTr &amp;&amp; apiServerPlatformNextTr.nodeName !== 'TR') {
+								apiServerPlatformNextTr = apiServerPlatformNextTr.nextElementSibling;
+						        }
+		            if (apiServerPlatformNextTr) {
+								apiServerPlatformNextTr.style.display = 'table-row';
+		                        apiServerTr=apiServerPlatformNextTr;
+		                        }
+		         }else{
 					apiServerTr.style.display = 'none';
 					//apiServerTr.previous('tr').style.display = 'none';
-					if (apiServerTr.next('tr')) {
-						apiServerTr.next('tr').style.display = 'none';
-					}
-				}
+		            var apiServerPlatformNextTr = apiServerTr.nextElementSibling;
+		            while (apiServerPlatformNextTr &amp;&amp; apiServerPlatformNextTr.nodeName !== 'TR') {
+        						apiServerPlatformNextTr = apiServerPlatformNextTr.nextElementSibling;
+        					}
+		            if (apiServerPlatformNextTr) {
+        						apiServerPlatformNextTr.style.display = 'none';
+		                        apiServerTr=apiServerPlatformNextTr;
+                           }
+				  }
 			}
-			
+
 			if(document.getElementById("platform").value == "PCP"){
 		    	apiServerTr.style.display = 'table-row';
-		    	if (apiServerTr.next()) {
-					apiServerTr.next().style.display='table-row';
-				}
 		    }
-		    
+
 		    if(document.getElementById("optionProfile").value == "other"){
 		    	otherOptionTr.style.display = 'table-row';
-		    	if (otherOptionTr.next()) {
-					otherOptionTr.next().style.display='table-row';
-				}
 		    }
-		    
+
 		    if(document.getElementById("authRecord").value == "other"){
 		    	otherAuthTr.style.display = 'table-row';
-		    	if (otherAuthTr.next()) {
-					otherAuthTr.next().style.display='table-row';
-				}
 		    }
-		    
+
 		    if(document.getElementById("cancelOptions").value == "xhours"){
 		    	xHrsTr.style.display = 'table-row';
 		    }
-			
+
 			document.getElementById("optionProfile").onchange = function(){
 				if(this.value === "other"){
 					otherOptionTr.style.display = 'table-row';
-					if (otherOptionTr.next()) {
-						otherOptionTr.next().style.display='table-row';
-					}
 				}else{
 					otherOptionTr.style.display = 'none';
-					if (otherOptionTr.next()) {
-						otherOptionTr.next().style.display='none';
-					}
 				}
 			}
 			document.getElementById("authRecord").onchange = function(){
@@ -134,14 +133,10 @@
 					//document.getElementById("otherAuth").value = "";
 					//document.getElementById("authInfoMessage").innerHTML = "";
 					otherAuthTr.style.display = 'table-row';
-					if (otherAuthTr.next()) {
-						otherAuthTr.next().style.display='table-row';
-					}
+
 				}else{
 					otherAuthTr.style.display = 'none';
-					if (otherAuthTr.next()) {
-						otherAuthTr.next().style.display='none';
-					}
+
 				}
 			}
 			document.getElementById("cancelOptions").onchange = function(){
@@ -151,8 +146,8 @@
 					xHrsTr.style.display = 'none';
 			}
 		}
-		
-    	
+
+
     	function getInfoAPI(checkUrl) {
 			var apiServer = document.getElementById("apiServer").value;
 			var credsId = document.getElementsByName('_.credsId')[0].value;
@@ -161,7 +156,7 @@
 			var proxyPort = document.getElementById("proxyPort").value;
 			var proxyUsername = document.getElementById("proxyUsername").value;
 			var proxyPassword= document.getElementById("proxyPassword").value;
-			
+
 			if (/\S/.test(apiServer) &amp;&amp; /\S/.test(credsId)) {
 				var parameters = {
 					"apiServer": apiServer,
@@ -172,43 +167,43 @@
 					"proxyPassword": proxyPassword,
 					"useProxy": useProxy
 				};
-				
-			      new Ajax.Request(checkUrl + 'getWebAppList', {
-				      parameters: parameters,
-				      onComplete: function(rsp) {
+
+                fetch(checkUrl + 'getWebAppList' + "?" + new URLSearchParams(params), {
+		        method: 'POST',
+                headers: crumb.wrap({ 'Content-Type': 'application/x-www-form-urlencoded'})
+                }).then((rsp) => {
 				      	  updateDropdowns(rsp, 'webapp');
-				      }
 				  });
-				  
-				  new Ajax.Request(checkUrl + 'getAuthRecordList', {
-				      parameters: parameters,
-				      onComplete: function(rsp) {
+
+               fetch(checkUrl + 'getAuthRecordList' + "?" + new URLSearchParams(params), {
+               method 'POST',
+               headers: crumb.wrap({ 'Content-Type': 'application/x-www-form-urlencoded'})
+               }).then((rsp) => {
 				      	  updateDropdowns(rsp, 'authRecord');
-				      }
 				  });
-				  
-				  new Ajax.Request(checkUrl + 'getOptionProfileList', {
-				      parameters: parameters,
-				      onComplete: function(rsp) {
+
+              fetch(checkUrl + 'getOptionProfileList' + "?" + new URLSearchParams(params), {
+              method: 'POST',
+              headers: crumb.wrap({ 'Content-Type': 'application/x-www-form-urlencoded'})
+              }).then((rsp) => {
 				      	  updateDropdowns(rsp, 'optionProfile');
-				      }
 				  });
 			}
 		}
-		
+
 		function updateDropdowns(response, list){
 			console.log(response);
 		}
-		
-		
+
+
 	</script>
-    
+
     <f:block>
     	<div class="qualys_logo">
 			<img src="${resURL}/plugin/qualys-was/images/logo.png"/>
 		</div>
     </f:block>
-    
+
     <f:section title="API Login">
     	<f:block> <div> Provide details for accessing the Qualys WAS API.  </div> <br /> </f:block>
 
@@ -224,7 +219,7 @@
 	    <f:entry field="credsId" title=" ${%Credentials}" help="/plugin/qualys-was/help/credentialsId.html">
 			<c:select id="credsId" onchange="getInfoAPI('${descriptor.descriptorFullUrl}/')"/>
 		</f:entry>
-	    
+
 	    <f:optionalBlock name="useProxy" title="Use Proxy Settings" field="useProxy" inline="true">
 	    	<f:block> <div style="margin-left:30px;">
 		    	<f:entry title="Proxy Server:" field="proxyServer" description="Examples: 10.15.201.155, corp.proxyserver.company.com" help="/plugin/qualys-was/help/proxyServer.html" >
@@ -236,19 +231,19 @@
 		    	<f:entry field="proxyCredentialsId" title=" ${%Credentials}" help="/plugin/qualys-api-security/help/proxyCredentialsId.html">
 					<c:select id="proxyCredentialsId" />
 				</f:entry>
-		    </div></f:block> 
+		    </div></f:block>
 	    </f:optionalBlock>
-	    
+
 	    <f:validateButton title="Test Connection" progress="Testing..." method="checkConnection" with="platform,apiServer,credsId,proxyServer,proxyPort,proxyCredentialsId,useProxy"/>
 	</f:section>
-	
-	
+
+
     <f:section title="Launch Scan API Parameters">
     	<f:block> <div> Provide information required to launch the scan  </div> <br /> </f:block>
 		<f:entry title="Select Web Application from WAS" field="webAppId" help="/plugin/qualys-was/help/webAppId.html">
 	        <f:select fillDependsOn="apiServer credsId" style="width: 35%; min-width: 250px;" />
 	    </f:entry>
-	    	
+
 	    <f:entry title="Scan Name" field="scanName" help="/plugin/qualys-was/help/scanName.html">
 	        <f:textbox default="[job_name]_jenkins_build_[build_number]" style="width: 50%; min-width: 320px;" />
 	    </f:entry>
@@ -256,7 +251,7 @@
 		    <f:select name="scanType" />
 		</f:entry>
 	</f:section>
-	
+
 	<f:section title="Optional Parameters">
     	<f:block> <div> Provide Optional API parameters required to call LaunchScanAPI  </div> <br /> </f:block>
 		<f:entry title="Authentication Record" field="authRecord" help="/plugin/qualys-was/help/authRecord.html">
@@ -267,7 +262,7 @@
 		        <f:select fillDependsOn="apiServer credsId" style="width: 35%; min-width: 250px;" />
 		    </f:entry>
 	    </f:block >
-	    
+
 	    <f:entry title="Option Profile" field="optionProfile" help="/plugin/qualys-was/help/optionProfile.html">
 	        <f:select name="optionProfile" id="optionProfile" />
 	    </f:entry>
@@ -276,11 +271,11 @@
 		        <f:select fillDependsOn="apiServer credsId" style="width: 35%; min-width: 250px;" />
 		    </f:entry>
 	    </f:block >
-	    
+
 	    <f:entry title="Cancel Options" field="cancelOptions" help="/plugin/qualys-was/help/cancelOption.html">
 	        <f:select name="cancelOptions" id="cancelOptions" />
 	    </f:entry>
-	    
+
 	    <f:block >
 	    	<f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; Hours:" field="cancelHours" name="cancelHours" id="cancelHours">
 		        <f:select style="width: 65px; min-width: 65px;" />
@@ -291,22 +286,22 @@
 				<img src="${resURL}/plugin/qualys-was/images/logo.png" onload="docReady1()"/>
 			</div>
     	</f:block>
-    	
+
     	<f:block>
 			<f:section title="Configure Scan Pass/Fail Criteria">
-				<f:block> 
+				<f:block>
 					<div>Set the conditions to fail the build job. The build will fail when ANY of conditions are met. </div> <br />
-					
+
 					<f:block>
 						<div class="failureTitle">&#160; &#160; &#160; &#160; <b>Failure Conditions</b></div>
 				     </f:block>
-				     
+
 					 <f:block>
-						<div id="severityTitle" class="conditionTitle">&#160; &#160; &#160; &#160; &#160; &#160; &#160; By Vulnerability Severity</div> 
+						<div id="severityTitle" class="conditionTitle">&#160; &#160; &#160; &#160; &#160; &#160; &#160; By Vulnerability Severity</div>
 			    	</f:block>
-					
+
 					<f:entry  help="/plugin/qualys-was/help/severity.html"></f:entry>
-			      	
+
 			      	<f:block>
 				      	<div class="severityBlock" id="SeveritySection">
 					        &#160; &#160; &#160; &#160; &#160; &#160; &#160; <f:checkbox field="isSev1Vulns" title="Fail with more than " />
@@ -316,27 +311,27 @@
 					        &#160; &#160; &#160; &#160; &#160; &#160; &#160; <f:checkbox field="isSev2Vulns" title="Fail with more than   " />
 					        <f:textbox field="severity2Limit" name="severity2Limit" style="width:9%; min-width:45px; max-width:50px;" default="0"/> severity 2
 					    </div>
-				      	<div class="severityBlock"> 
+				      	<div class="severityBlock">
 					        &#160; &#160; &#160; &#160; &#160; &#160; &#160; <f:checkbox field="isSev3Vulns" title="Fail with more than   " />
 					        <f:textbox field="severity3Limit" name="severity3Limit" style="width:9%; min-width:45px; max-width:50px;" default="0"/> severity 3
 					   </div>
-				      	<div class="severityBlock"> 
+				      	<div class="severityBlock">
 					        &#160; &#160; &#160; &#160; &#160; &#160; &#160; <f:checkbox field="isSev4Vulns" title="Fail with more than   " />
 					        <f:textbox field="severity4Limit" name="severity4Limit" style="width:9%; min-width:45px; max-width:50px;" default="0"/> severity 4
 					   </div>
-					   <div class="severityBlock"> 
+					   <div class="severityBlock">
 					        &#160; &#160; &#160; &#160; &#160; &#160; &#160; <f:checkbox field="isSev5Vulns" title="Fail with more than   " />
 					        <f:textbox field="severity5Limit" name="severity5Limit" style="width:9%; min-width:45px; max-width:50px;" default="0"/> severity 5
 					   </div>
 					</f:block>
-					
+
 					<f:block>
 						<div class="conditionTitle"> &#160; &#160; &#160; &#160; &#160; &#160; &#160; By Qualys WAS Vulnerability Identifiers (QIDs)</div>
 					</f:block>
-					
+
 					<f:entry  help="/plugin/qualys-was/help/qids.html"></f:entry>
-			      	
-			      	<f:block>	
+
+			      	<f:block>
 			      		<div class="severityBlock" id="qidSection">
 					        &#160; &#160; &#160; &#160; &#160; &#160; &#160; <f:checkbox field="isFailOnQidFound" title="Fail with any of these QIDs:" />
 					        <f:textbox field="qidList" name="qidList" style="width:60%; min-width:70px;" description="Example: 179203,2331497,170560-170590" />
@@ -347,40 +342,40 @@
 					    	<br />
 					    </div>
 			    	</f:block>
-			    </f:block>	
-			    
+			    </f:block>
+
 			    <f:block>
 					<div class="failureTitle">&#160; &#160; &#160; &#160; <b>Timeout Settings</b></div>
 				</f:block>
-			    
-			    <f:block> <div style="margin-top: -5px;"> &#160; &#160; &#160; &#160; Qualys WAS Scan results will be collected per these settings. For each enter a value in minutes or an expression like 2*60 for 2 hours. <br /> </div> 
+
+			    <f:block> <div style="margin-top: -5px;"> &#160; &#160; &#160; &#160; Qualys WAS Scan results will be collected per these settings. For each enter a value in minutes or an expression like 2*60 for 2 hours. <br /> </div>
 				    <f:block>
 						<div style="margin-top:5px;"> &#160; &#160; &#160; &#160; &#160; &#160; &#160; Frequency</div>
 					</f:block>
 				    <f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160;  How often to check for data " field="pollingInterval" help="/plugin/qualys-was/help/polling.html">
 					    <f:textbox style="width: 15%;" default="5"/> minutes.
 					</f:entry>
-					
+
 					<f:block>
 						<div > &#160; &#160; &#160; &#160; &#160; &#160; &#160; Timeout</div>
 					</f:block>
 				    <f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; How long to wait for scan results" field="vulnsTimeout" help="/plugin/qualys-was/help/timeout.html">
 					    <f:textbox style="width: 15%;" default="60*24"/> minutes.
 					</f:entry>
-					
+
 				</f:block>
-				
+
 				<f:entry>
 			    	<f:textbox field="" style="visibility:hidden"/>
 			    </f:entry>
-				
-			</f:section>  
-			
+
+			</f:section>
+
 		</f:block>
-    	
+
 	</f:section>
 	<script type="text/javascript">
-		
+
 	</script>
-    
+
 </j:jelly>

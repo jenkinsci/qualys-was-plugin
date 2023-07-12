@@ -149,14 +149,14 @@ function drawVulnsCharts(scanResults){
     var c = jQuery("#sevVulns").get(0);
     var ctx = c.getContext("2d");
 
-    jQuery("#sevVulns-error").hide();
-    jQuery("#sevVulns").show();
-    jQuery("#pie-legend-div").show();
+    jQuery("#sevVulns-error").css("display","none");
+    jQuery("#sevVulns").css("display","block");
+    jQuery("#pie-legend-div").css("display","block");
 
     if (scanResults.vulns == "0") {
-        jQuery("#sevVulns").hide();
-        jQuery("#pie-legend-div").hide();
-        jQuery("#sevVulns-error").show();
+        jQuery("#sevVulns").css("display","none");
+        jQuery("#pie-legend-div").css("display","none");
+        jQuery("#sevVulns-error").css("display","block");
     } else {
         var d = scanResults.vulnsBySeverity;
         var i = 0;
