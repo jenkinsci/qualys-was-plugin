@@ -56,97 +56,63 @@
     	#qidSevSection.severityBlock{
     		margin-left: -125px !important;
     	}
-    	
+
     </style>
-    <script type="text/javascript">
+        <script>
 		document.onreadystatechange = docReady1;
 		document.load = docReady1;
+		
     	function docReady1() {
-			updateApiServer();
+    		updateApiServer();
 			updateOptionProfiles();
 			updateAuthRecord();
 			updateCancelOptions();
-			
-		}
-		function updateApiServer(){
-			if (document.getElementById("platform") != null) {
+        }
+		
+        function updateApiServer(){  
+ 			if (document.getElementById("platform") != null) {
+				document.getElementById('apiServerDiv').style.display = 'block';
 				var apiServerTr = document.getElementsByName("_.apiServer")[0].parentNode.parentNode;
 				apiServerTr.style.display = 'none';
-		
-				if (document.getElementById("platform").onchange == null) {
-				    document.getElementById("platform").onchange = function(){
-						if(this.value === "PCP"){
-							apiServerTr.style.display = 'table-row';
-						}else{
-							apiServerTr.style.display = 'none';
-						}
-					}
-				}
-				
-				if(document.getElementById("platform").value == "PCP"){
-			    	apiServerTr.style.display = 'table-row';
-			    }
-		    }
+				if(this.value === "PCP" ||document.getElementById("platform").value == "PCP"){
+						apiServerTr.style.display = 'table-row'; 
+				}	
+		    } 
 	    }
+			
 		function updateOptionProfiles(){
-			if (document.getElementById("optionProfile") != null) {
+ 			if (document.getElementById("optionProfile") != null) {
+				document.getElementById('optionProfileIdDiv').style.display = 'block';
 				var otherOptionTr = document.getElementsByName("_.optionProfileId")[0].parentNode.parentNode;
 				otherOptionTr.style.display = 'none';
+					if(this.value === "other" ||document.getElementById("optionProfile").value == "other"){
+						otherOptionTr.style.display = 'table-row'; 
+					}	
+		    } 
+	    }
 		
-				if (document.getElementById("optionProfile").onchange == null) {
-				    document.getElementById("optionProfile").onchange = function(){
-						if(this.value === "other"){
-							otherOptionTr.style.display = 'table-row';
-						}else{
-							otherOptionTr.style.display = 'none';
-						}
-					}
-				}		
-				if(document.getElementById("optionProfile").value == "other"){
-			    	otherOptionTr.style.display = 'table-row';
-			    }
-		    }
-	    }	   
     	function updateAuthRecord(){
-			if (document.getElementById("authRecord") != null) {
+ 			if (document.getElementById("authRecord") != null) {
+				document.getElementById('authRecordIdDiv').style.display = 'block';
 				var otherAuthTr = document.getElementsByName("_.authRecordId")[0].parentNode.parentNode;
 				otherAuthTr.style.display = 'none';
-		
-				if (document.getElementById("authRecord").onchange == null) {
-				    document.getElementById("authRecord").onchange = function(){
-						if(this.value === "other"){
+				if(this.value === "other"||(document.getElementById("authRecord").value == "other")){
 							otherAuthTr.style.display = 'table-row';
-						}else{
-							otherAuthTr.style.display = 'none';
-						}
-					}
-				}
-				
-				if(document.getElementById("authRecord").value == "other"){
-			    	otherAuthTr.style.display = 'table-row';
 			    }
-		    }
-	    }
+			} 
+		}
+						
 		function updateCancelOptions(){
-			if (document.getElementById("cancelOptions") != null) {
+ 			if (document.getElementById("cancelOptions") != null) {
+				document.getElementById('cancelHoursDiv').style.display = 'block';
 				var xHrsTr = document.getElementsByName("_.cancelHours")[0].parentNode.parentNode;
 				xHrsTr.style.display = 'none';
-		
-				if (document.getElementById("cancelOptions").onchange == null) {
-				    document.getElementById("cancelOptions").onchange = function(){
-						if(this.value === "xhours"){
+					if(this.value === "xhours"||document.getElementById("cancelOptions").value == "xhours"){
 							xHrsTr.style.display = 'table-row';
-						}else{
-							xHrsTr.style.display = 'none';
-						}
 					}
-				}
-				
-				if(document.getElementById("cancelOptions").value == "xhours"){
-			    	otherAuthTr.style.display = 'table-row';
-			    }
-		    }
-	    }
+			} 
+
+		}
     	function getInfoAPI(checkUrl) {
 			var apiServer = document.getElementById("apiServer").value;
 			var credsId = document.getElementsByName('_.credsId')[0].value;
@@ -193,16 +159,13 @@
 		function updateDropdowns(response, list){
 			console.log(response);
 		}
-		updateApiServer();
-		updateOptionProfiles();
-		updateAuthRecord();
-		updateCancelOptions();
 		
+
 	</script>
-    
+
     <f:block>
     	<div class="qualys_logo">
-			<img src="${resURL}/plugin/qualys-was/images/logo.png"/>
+			<img src="${resURL}/plugin/qualys-was/images/logo.png" onload="docReady1()"/>
 		</div>
     </f:block>
     
@@ -210,14 +173,14 @@
     	<f:block> <div> Provide details for accessing the Qualys WAS API.  </div> <br /> </f:block>
 
 		<f:entry title="Your Qualys Portal" field="platform" help="/plugin/qualys-was/help/platform.html">
-	        <f:select name="platform" id="platform" />
+	        <f:select name="platform" id="platform" onChange="updateApiServer()" />
 	    </f:entry>
-	    <f:block >
+		<f:block><div style="display:none" id ="apiServerDiv">
 	    	<f:entry field="apiServer" title="API Server URL:" help="/plugin/qualys-was/help/apiServer.html">
 		        <f:textbox id="apiServer" />
 		    </f:entry>
-	    </f:block >
-
+		    </div>
+        </f:block>
 	    <f:entry field="credsId" title=" ${%Credentials}" help="/plugin/qualys-was/help/credentialsId.html">
 			<c:select id="credsId" onchange="getInfoAPI('${descriptor.descriptorFullUrl}/')"/>
 		</f:entry>
@@ -257,31 +220,34 @@
 	<f:section title="Optional Parameters">
     	<f:block> <div> Provide Optional API parameters required to call LaunchScanAPI  </div> <br /> </f:block>
 		<f:entry title="Authentication Record" field="authRecord" help="/plugin/qualys-was/help/authRecord.html">
-	        <f:select name="authRecord" id="authRecord" />
+	        <f:select name="authRecord" id="authRecord" onChange="updateAuthRecord()" />
 	    </f:entry>
-	    <f:block >
+	    <f:block><div style="display:none" id ="authRecordIdDiv">
 	    	<f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; Auth Record Name:" field="authRecordId" name="authRecordId" id="otherAuth" help="/plugin/qualys-was/help/authRecordId.html">
 		        <f:select fillDependsOn="apiServer credsId" style="width: 35%; min-width: 250px;" />
 		    </f:entry>
+			</div>
 	    </f:block >
-	    
+
 	    <f:entry title="Option Profile" field="optionProfile" help="/plugin/qualys-was/help/optionProfile.html">
-	        <f:select name="optionProfile" id="optionProfile" />
+	        <f:select name="optionProfile" id="optionProfile" onChange="updateOptionProfiles()" />
 	    </f:entry>
-	    <f:block >
+	    <f:block><div style="display:none" id ="optionProfileIdDiv">
 	    	<f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; Profile Name:" field="optionProfileId" name="optionProfileId" id="otherOption" help="/plugin/qualys-was/help/optionProfileId.html">
 		        <f:select fillDependsOn="apiServer credsId" style="width: 35%; min-width: 250px;" />
 		    </f:entry>
+			</div>
 	    </f:block >
 	    
 	    <f:entry title="Cancel Options" field="cancelOptions" help="/plugin/qualys-was/help/cancelOption.html">
-	        <f:select name="cancelOptions" id="cancelOptions" />
+	        <f:select name="cancelOptions" id="cancelOptions" onChange="updateCancelOptions()" />
 	    </f:entry>
 	    
-	    <f:block >
+	    <f:block><div style="display:none" id ="cancelHoursDiv">
 	    	<f:entry title="&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; Hours:" field="cancelHours" name="cancelHours" id="cancelHours">
 		        <f:select style="width: 65px; min-width: 65px;" />
 		    </f:entry>
+			</div>
 	    </f:block >
 	    <f:block>
 	    	<div class="qualys_logo" style="display:none;">
@@ -326,7 +292,7 @@
 					        <f:textbox field="severity5Limit" name="severity5Limit" style="width:9%; min-width:45px; max-width:50px;" default="0"/> severity 5
 					   </div>
 					</f:block>
-					<f:entry id="blankTr"></f:entry>
+
 					<f:block>
 						<div class="conditionTitle"> &#160; &#160; &#160; &#160; &#160; &#160; &#160; By Qualys WAS Vulnerability Identifiers (QIDs)</div>
 					</f:block>
@@ -344,7 +310,6 @@
 					    	<br />
 					    </div>
 			    	</f:block>
-					<f:entry id="blankTr"></f:entry>
 			    </f:block>	
 			    
 			    <f:block>
@@ -375,13 +340,10 @@
 			</f:section>  
 			
 		</f:block>
-    	
+
 	</f:section>
 	<script type="text/javascript">
-	    updateApiServer();
-		updateOptionProfiles();
-		updateAuthRecord();
-		updateCancelOptions();
+
 	</script>
     
 </j:jelly>
