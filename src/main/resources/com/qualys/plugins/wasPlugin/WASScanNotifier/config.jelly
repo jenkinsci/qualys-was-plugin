@@ -121,7 +121,7 @@
 			var proxyPort = document.getElementById("proxyPort").value;
 			var proxyUsername = document.getElementById("proxyUsername").value;
 			var proxyPassword= document.getElementById("proxyPassword").value;
-			
+
 			if (/\S/.test(apiServer) &amp;&amp; /\S/.test(credsId)) {
 				var parameters = {
 					"apiServer": apiServer,
@@ -132,30 +132,42 @@
 					"proxyPassword": proxyPassword,
 					"useProxy": useProxy
 				};
-				
-			      new Ajax.Request(checkUrl + 'getWebAppList', {
-				      parameters: parameters,
-				      onComplete: function(rsp) {
-				      	  updateDropdowns(rsp, 'webapp');
-				      }
+
+			      fetch(checkUrl + 'getWebAppList' + "?" + new
+				  URLSearchParams(params), {    
+				      method: "POST",
+				      headers: crumb.wrap({
+						  "Content-Type":
+						  "application/x-www-form-urlencoded",
+						  })
+					 }).then((rsp) => {
+						updateDropdowns(rsp, 'authRecord'); 
 				  });
 				  
-				  new Ajax.Request(checkUrl + 'getAuthRecordList', {
-				      parameters: parameters,
-				      onComplete: function(rsp) {
-				      	  updateDropdowns(rsp, 'authRecord');
-				      }
+				  fetch(checkUrl + 'getAuthRecordList' + "?" + new
+				  URLSearchParams(params), {    
+				      method: "POST",
+				      headers: crumb.wrap({
+						  "Content-Type":
+						  "application/x-www-form-urlencoded",
+						  })
+					 }).then((rsp) => {
+						updateDropdowns(rsp, 'authRecord'); 
 				  });
 				  
-				  new Ajax.Request(checkUrl + 'getOptionProfileList', {
-				      parameters: parameters,
-				      onComplete: function(rsp) {
-				      	  updateDropdowns(rsp, 'optionProfile');
-				      }
+				  fetch(checkUrl + 'getOptionProfileList' + "?" + new
+				  URLSearchParams(params), {    
+				      method: "POST",
+				      headers: crumb.wrap({
+						  "Content-Type":
+						  "application/x-www-form-urlencoded",
+						  })
+					 }).then((rsp) => {
+						updateDropdowns(rsp, 'authRecord'); 
 				  });
 			}
 		}
-		
+
 		function updateDropdowns(response, list){
 			console.log(response);
 		}
