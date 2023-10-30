@@ -122,34 +122,7 @@ public class Helper {
 	    }
 	    return msg.toString();
 	}
-	
-	public static Object execXPath(String xml, String xPath, QName type) {
 
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-
-        try {
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document doc = builder
-                    .parse(new InputSource(new StringReader(xml)));
-            return execXPath(doc, xPath, type);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-    public static Object execXPath(Node node, String xPath, QName type) {
-
-        XPath xpath = XPathFactory.newInstance().newXPath();
-
-        Object object = null;
-        try {
-            object = xpath.evaluate(xPath, node, type);
-        } catch (XPathExpressionException e) {
-            e.printStackTrace();
-        }
-        return object;
-    }
     
     public static Logger getLogger(String loggerName) {
     	Logger pluginLogger = Logger.getLogger(loggerName);
