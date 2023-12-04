@@ -14,8 +14,12 @@
   <packaging>hpi</packaging>
 
   <properties>
-	<jenkins.version>2.319.3</jenkins.version>
-    <java.version>1.8</java.version>
+<!--	<jenkins.version>2.361.1</jenkins.version>-->
+
+<!--      <jenkins.version>2.414.3</jenkins.version>-->
+      <jenkins.version>2.319.3</jenkins.version>
+
+      <java.version>1.8</java.version>
     <java.level>8</java.level>
   </properties>
 
@@ -96,6 +100,11 @@
 		<artifactId>httpclient</artifactId>
 		<version>4.5.13</version>
 	</dependency>
+      <dependency>
+          <groupId>org.json</groupId>
+          <artifactId>json</artifactId>
+          <version>20231013</version>
+      </dependency>
   
 </dependencies>
 

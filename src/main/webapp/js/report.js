@@ -9,13 +9,15 @@ function showVulnsTable(scanResult){
 		 "dom": '<"vulns-table-top"l<"custom-filters">>rt<"vulns-table-bottom"ip><"clear">',
         "aaData": vulns,
         "aoColumns":[
-            
+
             { "mData": "WasScanVuln.qid", sDefaultContent :  '', "width": "7%", "className": "dt-head-left"},
             { "mData": "WasScanVuln.severity", sDefaultContent :  '', "width": "2%"},
-            { "mData": "WasScanVuln.title", sDefaultContent :  '', "width": "30%", "className": "dt-head-left"},
+            { "mData": "WasScanVuln.title", sDefaultContent :  '', "width": "15%", "className": "dt-head-left"},
             { "mData": "WasScanVuln.severity", sDefaultContent :  '', "width": "10%", "className": "center"},
-            { "mData": "WasScanVuln.uri", sDefaultContent :  '', "width": "40%", "className": "dt-head-left"},
-            { "mData": "WasScanVuln.instances", sDefaultContent :  '', "width": "10%", "className": "center"}
+            { "mData": "WasScanVuln.uri", sDefaultContent :  '', "width": "20%", "className": "dt-head-left"},
+            { "mData": "WasScanVuln.instances", sDefaultContent :  '', "width": "15%", "className": "center"},
+//            { "mData": "WasScanVuln.solution", sDefaultContent :  '', "width": "25%", "className": "dt-head-left"},
+//             { "mData": "WasScanVuln.diagnosis", sDefaultContent :  '', "width": "25%", "className": "dt-head-left"}
 
         ],
         'aoColumnDefs': [
@@ -116,6 +118,22 @@ function showVulnsTable(scanResult){
   		$("#breakingVulns").prop("checked",false);
   		table.search( '' ).columns().search( '' ).draw();
 	});
+
+	    jQuery('#vulnsTable tbody').on('click', 'td', function () {
+            var tr = jQuery(this).closest('tr');
+            var row = table.row( tr );
+
+            if ( row.child.isShown() ) {
+                // This row is already open - close it
+                row.child.hide();
+                tr.removeClass('shown');
+            }
+            else {
+                // Open this row
+                row.child( format(row.data()) ).show();
+                tr.addClass('shown');
+            }
+        });
 }
 
 function showEvaluationSummary(scanResult){
@@ -225,4 +243,15 @@ function drawVulnsCharts(scanResults){
             "options": options
         });
     }
+}
+
+function format ( d ) {
+    return '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">'+
+	    '<tr>'+
+	    	'<td><b>Solution:</b> '+d.WasScanVuln.solution +'</td>'+
+	    '</tr>'+
+        '<tr>'+
+	    	'<td><b>Diagnosis:</b> '+ d.WasScanVuln.diagnosis +'</td>'+
+	    '</tr>'
+    '</table>';
 }
