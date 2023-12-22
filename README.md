@@ -54,4 +54,7 @@ In the Timeout settings, specify the polling frequency in minutes for collecting
 
 If you are configuring pipeline project, click the `Generate Pipeline Script` button/link. It will give you a command which you can copy and paste in your project's pipeline script. 
 
+### Release Notes for v2.0.12
+* In v2.0.12, Some fields may not work properly on latest Jenkins Versions, Hotfix for this issue will be released in v2.1.0 in January 2024.
+
 
