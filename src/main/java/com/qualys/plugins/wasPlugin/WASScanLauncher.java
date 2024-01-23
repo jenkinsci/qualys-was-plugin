@@ -261,7 +261,6 @@ public class WASScanLauncher{
     	if (scanStatus.equalsIgnoreCase("finished")) {
     		Gson gson = new Gson();
     		scanResult = getScanResult(scanId);
-			//---------- Rushikesh Changes start
 			if(!batchAndGetKbData(scanResult)){
 				listener.getLogger().println(new Timestamp(System.currentTimeMillis()) + " KB data not found. " );
 			}
