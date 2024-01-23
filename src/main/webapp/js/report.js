@@ -9,18 +9,24 @@ function showVulnsTable(scanResult){
 		 "dom": '<"vulns-table-top"l<"custom-filters">>rt<"vulns-table-bottom"ip><"clear">',
         "aaData": vulns,
         "aoColumns":[
-            
+            {
+                "className": 'details-control',
+                "orderable": false,
+                "data": null,
+                "defaultContent": ''
+            },
             { "mData": "WasScanVuln.qid", sDefaultContent :  '', "width": "7%", "className": "dt-head-left"},
             { "mData": "WasScanVuln.severity", sDefaultContent :  '', "width": "2%"},
-            { "mData": "WasScanVuln.title", sDefaultContent :  '', "width": "30%", "className": "dt-head-left"},
+            { "mData": "WasScanVuln.title", sDefaultContent :  '', "width": "15%", "className": "dt-head-left"},
             { "mData": "WasScanVuln.severity", sDefaultContent :  '', "width": "10%", "className": "center"},
-            { "mData": "WasScanVuln.uri", sDefaultContent :  '', "width": "40%", "className": "dt-head-left"},
-            { "mData": "WasScanVuln.instances", sDefaultContent :  '', "width": "10%", "className": "center"}
+            { "mData": "WasScanVuln.uri", sDefaultContent :  '', "width": "20%", "className": "dt-head-left"},
+            { "mData": "WasScanVuln.instances", sDefaultContent :  '', "width": "15%", "className": "center"}
 
         ],
         'aoColumnDefs': [
-            { "sTitle": "QID", "aTargets": [0], "className": "text-left"},
-        	{ "sTitle": "", "aTargets": [1],
+            { "sTitle": "", "aTargets": [0] },
+            { "sTitle": "QID", "aTargets": [1], "className": "text-left"},
+        	{ "sTitle": "", "aTargets": [2],
             	"render":  function ( data, type, row ) {
         			var sev = parseInt(data);
         			var reportObject = scanResult.evaluationResult;
@@ -58,10 +64,10 @@ function showVulnsTable(scanResult){
             	}
             },
       
-            { "sTitle": "Title", "aTargets": [2], "className": "text-left" },    
-            { "sTitle": "Severity", "aTargets": [3],"className": "text-left" },    
-            { "sTitle": "URL", "aTargets": [4], "className": "text-left" },
-            { "sTitle": "Available Unauthenticated?", "aTargets": [5],"className": "text-left",
+            { "sTitle": "Title", "aTargets": [3], "className": "text-left" },
+            { "sTitle": "Severity", "aTargets": [4],"className": "text-left" },
+            { "sTitle": "URL", "aTargets": [5], "className": "text-left" },
+            { "sTitle": "Available Unauthenticated?", "aTargets": [6],"className": "text-left",
             	"render":  function ( data, type, row ) {
         			var list = data.list;
         			var auth = "No";
@@ -116,6 +122,22 @@ function showVulnsTable(scanResult){
   		$("#breakingVulns").prop("checked",false);
   		table.search( '' ).columns().search( '' ).draw();
 	});
+
+	    jQuery('#vulnsTable tbody').on('click', 'td', function () {
+            var tr = jQuery(this).closest('tr');
+            var row = table.row( tr );
+
+            if ( row.child.isShown() ) {
+                // This row is already open - close it
+                row.child.hide();
+                tr.removeClass('shown');
+            }
+            else {
+                // Open this row
+                row.child( format(row.data()) ).show();
+                tr.addClass('shown');
+            }
+        });
 }
 
 function showEvaluationSummary(scanResult){
@@ -225,4 +247,17 @@ function drawVulnsCharts(scanResults){
             "options": options
         });
     }
+}
+
+function format ( d ) {
+    var solution = (d.WasScanVuln.solution?d.WasScanVuln.solution:'NotFound');
+    var diagnosis = (d.WasScanVuln.diagnosis?d.WasScanVuln.diagnosis:'Not Found');
+    return '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">'+
+	    '<tr>'+
+	    	'<td><b>Solution:</b> '+solution+'</td>'+
+	    '</tr>'+
+        '<tr>'+
+	    	'<td><b>Diagnosis:</b> '+ diagnosis +'</td>'+
+	    '</tr>'
+    '</table>';
 }
