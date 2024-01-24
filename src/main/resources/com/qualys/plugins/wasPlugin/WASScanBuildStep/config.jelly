@@ -73,19 +73,19 @@
 		apiServerTr.next('tr').style.display = 'none';
 		}
 
-		document.getElementById("platform").onchange = function(){
-		if(this.value === "PCP"){
-		apiServerTr.style.display = 'table-row';
-		if (apiServerTr.next('tr')) {
-		apiServerTr.next('tr').style.display = 'table-row';
-		}
-		}else{
-		apiServerTr.style.display = 'none';
-		if (apiServerTr.next('tr')) {
-		apiServerTr.next('tr').style.display = 'none';
-		}
-		}
-		}
+<!--		document.getElementById("platform").onchange = function(){-->
+<!--		if(this.value === "PCP"){-->
+<!--		apiServerTr.style.display = 'table-row';-->
+<!--		if (apiServerTr.next('tr')) {-->
+<!--		apiServerTr.next('tr').style.display = 'table-row';-->
+<!--		}-->
+<!--		}else{-->
+<!--		apiServerTr.style.display = 'none';-->
+<!--		if (apiServerTr.next('tr')) {-->
+<!--		apiServerTr.next('tr').style.display = 'none';-->
+<!--		}-->
+<!--		}-->
+<!--		}-->
 
 		for(i=1; i &lt; 25; i++){
 		var option = document.createElement("option");
@@ -95,38 +95,38 @@
 		select.appendChild(option);
 		}
 
-		document.getElementById("optionProfile").onchange = function(){
-		if(this.value === "other"){
-		otherOptionTr.style.display = 'table-row';
-		if (otherOptionTr.next()) {
-		otherOptionTr.next().style.display='table-row';
-		}
-		}else{
-		otherOptionTr.style.display = 'none';
-		if (otherOptionTr.next()) {
-		otherOptionTr.next().style.display='none';
-		}
-		}
-		}
-		document.getElementById("authRecord").onchange = function(){
-		if(this.value === "other"){
-		otherAuthTr.style.display = 'table-row';
-		if (otherAuthTr.next()) {
-		otherAuthTr.next().style.display='table-row';
-		}
-		}else{
-		otherAuthTr.style.display = 'none';
-		if (otherAuthTr.next()) {
-		otherAuthTr.next().style.display='none';
-		}
-		}
-		}
-		document.getElementById("cancelOptions").onchange = function(){
-		if(this.value === "xhours")
-		xHrsTr.style.display = 'table-row';
-		else
-		xHrsTr.style.display = 'none';
-		}
+<!--		document.getElementById("optionProfile").onchange = function(){-->
+<!--		if(this.value === "other"){-->
+<!--		otherOptionTr.style.display = 'table-row';-->
+<!--		if (otherOptionTr.next()) {-->
+<!--		otherOptionTr.next().style.display='table-row';-->
+<!--		}-->
+<!--		}else{-->
+<!--		otherOptionTr.style.display = 'none';-->
+<!--		if (otherOptionTr.next()) {-->
+<!--		otherOptionTr.next().style.display='none';-->
+<!--		}-->
+<!--		}-->
+<!--		}-->
+<!--		document.getElementById("authRecord").onchange = function(){-->
+<!--			if(this.value === "other"){-->
+<!--			otherAuthTr.style.display = 'table-row';-->
+<!--				if (otherAuthTr.next()) {-->
+<!--				otherAuthTr.next().style.display='table-row';-->
+<!--				}-->
+<!--			}else{-->
+<!--			otherAuthTr.style.display = 'none';-->
+<!--			if (otherAuthTr.next()) {-->
+<!--				otherAuthTr.next().style.display='none';-->
+<!--			}-->
+<!--			}-->
+<!--		}-->
+<!--		document.getElementById("cancelOptions").onchange = function(){-->
+<!--		if(this.value === "xhours")-->
+<!--		xHrsTr.style.display = 'table-row';-->
+<!--		else-->
+<!--		xHrsTr.style.display = 'none';-->
+<!--		}-->
 
 
 		for(i=1; i &lt; 25; i++){
