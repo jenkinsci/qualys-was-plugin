@@ -33,7 +33,15 @@
 			 text-align: -webkit-center;
 			 text-align: center;
 		}
-		
+
+		td.details-control {
+		background: url('${resURL}/plugin/qualys-was/images/details_open.png') no-repeat center center;
+		cursor: pointer;
+		}
+		tr.shown td.details-control {
+		background: url('${resURL}/plugin/qualys-was/images/details_close.png') no-repeat center center;
+		}
+
 		.status-icon.ok{
 			background: url('${resURL}/plugin/qualys-was/images/ok.png') no-repeat center center;
 	    	background-size: contain;

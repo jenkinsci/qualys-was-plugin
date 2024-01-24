@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.gson.JsonArray;
@@ -29,6 +30,9 @@ import hudson.model.TaskListener;
 import hudson.util.Secret;
 
 import com.google.gson.Gson;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.XML;
 
 public class WASScanLauncher{
 	private Run<?, ?> run;
@@ -64,7 +68,11 @@ public class WASScanLauncher{
     private final static Logger logger = Helper.getLogger(WASScanLauncher.class.getName());
     private final static int DEFAULT_POLLING_INTERVAL_FOR_VULNS = 5; //5 minutes
     private final static int DEFAULT_TIMEOUT_FOR_VULNS = 60*24; //24Hrs
-    
+
+	private final JsonObject kbData = new JsonObject();
+
+	private ArrayList<ArrayList<String>> qidBatches = new ArrayList<>();
+
     public WASScanLauncher(Run<?, ?> run, TaskListener listener, String webAppId, String scanName,
     		String scanType, String authRecord, String optionProfile, String cancelOptions, String authRecordId,
     		String optionProfileId, String cancelHours, boolean isFailConditionsConfigured, String pollingIntervalStr, String vulnsTimeoutStr, JsonObject criteriaObject, 
@@ -253,6 +261,36 @@ public class WASScanLauncher{
     	if (scanStatus.equalsIgnoreCase("finished")) {
     		Gson gson = new Gson();
     		scanResult = getScanResult(scanId);
+			if(!batchAndGetKbData(scanResult)){
+				listener.getLogger().println(new Timestamp(System.currentTimeMillis()) + " KB data not found. " );
+			}
+			else{
+				//adding data to file
+				JsonObject serviceResp = scanResult.getAsJsonObject("ServiceResponse");
+				JsonArray dataArr = serviceResp.getAsJsonArray("data");
+				JsonObject obj = dataArr.get(0).getAsJsonObject();
+				JsonObject scanObj = obj.getAsJsonObject("WasScan");
+				JsonObject vulns = scanObj.getAsJsonObject("vulns");
+				JsonArray listArr = vulns.getAsJsonArray("list");
+				int vulnsCount = vulns.get("count").getAsInt();
+
+				for(int i=0;i<vulnsCount;i++){
+					JsonObject listItem = listArr.get(i).getAsJsonObject();
+					JsonObject WasScanVuln = listItem.getAsJsonObject("WasScanVuln");
+					String qid = WasScanVuln.get("qid").getAsString();
+					String soln = kbData.get(qid+"_solution").getAsString();
+					String diagnosis = kbData.get(qid+"_diagnosis").getAsString();
+					if(!soln.isEmpty() && !diagnosis.isEmpty()){
+						WasScanVuln.addProperty("solution",soln);
+						WasScanVuln.addProperty("diagnosis",diagnosis);
+					}
+					else{
+						listener.getLogger().println(new Timestamp(System.currentTimeMillis()) + " Kb data not found for qid: " + qid);
+					}
+
+				}
+			}
+
 			String scanResultString = gson .toJson(scanResult);
 			Helper.createNewFile(run.getArtifactsDir().getAbsolutePath(), "qualys_" + scanId, scanResultString, listener.getLogger());
     	}else if (scanStatus.equalsIgnoreCase("canceled") && failOnScanError) {
@@ -265,7 +303,109 @@ public class WASScanLauncher{
 	
 		return scanResult;
 	}
-	
+
+	public JSONObject getKbData(String qids){
+		JsonObject kbData = null;
+		String params = "?action=list&details=All&show_supported_modules_info=1&ids="+qids;
+		String responseString = apiClient.getKbData(params);
+
+		JSONObject jsonResponse = null;
+		if (!responseString.isEmpty()) {
+			JSONObject reponseJson = new JSONObject(responseString);
+			String responseStatusCode = reponseJson.get("statusCode").toString();
+			String responseBody = reponseJson.get("body").toString();
+
+			if (responseStatusCode.equals("200")) {
+				// Convert XML response into JSON format
+				jsonResponse = XML.toJSONObject(responseBody);
+				//logger.info("GET KB Server Response: " + jsonHdResponse.toString());
+			}
+		}
+
+		return jsonResponse;
+	}
+
+	public Boolean batchAndGetKbData(JsonObject scanResult){
+		try {
+			JsonObject serviceResp = scanResult.getAsJsonObject("ServiceResponse");
+			JsonArray dataArr = serviceResp.getAsJsonArray("data");
+			JsonObject obj = dataArr.get(0).getAsJsonObject();
+			JsonObject scanObj = obj.getAsJsonObject("WasScan");
+			JsonObject vulns = scanObj.getAsJsonObject("vulns");
+			JsonArray listArr = vulns.getAsJsonArray("list");
+			int vulnsCount = vulns.get("count").getAsInt();
+
+			ArrayList<String> batch = new ArrayList<>();
+			for(int i=0;i<vulnsCount;i++){
+				JsonObject listItem = listArr.get(i).getAsJsonObject();
+				JsonObject WasScanVuln = listItem.getAsJsonObject("WasScanVuln");
+//				WasScanVuln.addProperty("solution","test solution");
+				String qid = WasScanVuln.get("qid").getAsString();
+				batch.add(qid);
+				if(batch.size() == 500){
+					ArrayList<String> oneBatch = new ArrayList<>();
+					oneBatch.addAll(batch);
+					qidBatches.add(oneBatch);
+					batch.clear();
+				}
+				else if(i == vulnsCount-1){
+					ArrayList<String> oneBatch = new ArrayList<>();
+					oneBatch.addAll(batch);
+					qidBatches.add(oneBatch);
+					batch.clear();
+				}
+
+			}
+
+			if (qidBatches != null && !qidBatches.isEmpty()) {
+				for (int i = 0; i <qidBatches.size() ; i++) {
+					String ids = qidBatches.get(i).toString().replace("[", "").replace("]", "").replace(" ", "");
+					Boolean batchResult = processBatch(ids);
+					if(!batchResult){
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		catch (Exception e){
+			e.printStackTrace();
+			listener.getLogger().println(new Timestamp(System.currentTimeMillis()) + " Error batchAndGetKbData: " + e.getMessage());
+			return false;
+		}
+	}
+
+	public Boolean processBatch(String qids) {
+		try {
+			Gson gson = new Gson();
+			JSONObject kbResult = getKbData(qids); //org.json
+			if (kbResult != null) {
+				JSONObject kbOutput = kbResult.getJSONObject("KNOWLEDGE_BASE_VULN_LIST_OUTPUT");
+				JSONObject kbResponse = kbOutput.getJSONObject("RESPONSE");
+				JSONObject kbVulnList = kbResponse.getJSONObject("VULN_LIST");
+				String scanResultString = gson.toJson(kbVulnList);
+//				logger.info("Batch test : " + scanResultString);
+				JSONArray kbVulns = kbVulnList.getJSONArray("VULN");
+				for (int i = 0; i < kbVulns.length(); i++) {
+					JSONObject listItem = kbVulns.getJSONObject(i);
+					String qid = Integer.toString(listItem.getInt("QID"));
+					String solution = listItem.getString("SOLUTION");
+					String diagnosis = listItem.getString("DIAGNOSIS");
+					kbData.addProperty(qid + "_solution", solution);
+					kbData.addProperty(qid + "_diagnosis", diagnosis);
+				}
+				return true;
+			} else {
+				listener.getLogger().println(new Timestamp(System.currentTimeMillis()) + " Kb data not found for qids: " + qids);
+				return false;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			listener.getLogger().println(new Timestamp(System.currentTimeMillis()) + " Error processBatch: " + e.getMessage());
+			return false;
+		}
+	}
+
 	public JsonObject getScanResult(String scanId) {
 		JsonObject scanResult = null;
 		QualysCSResponse statusResponse = apiClient.getScanResult(scanId);
@@ -278,7 +418,7 @@ public class WASScanLauncher{
 		try {
 			QualysCSResponse statusResponse = apiClient.getScanStatus(scanId);
 			JsonObject result = statusResponse.response;
-			//logger.info("API RESPONSE : " + result.toString());
+//			logger.info("API RESPONSE : " + result.toString());
 			JsonElement respEl = result.get("ServiceResponse");
 			JsonObject respObj = respEl.getAsJsonObject();
 			JsonElement respCodeObj = respObj.get("responseCode");
@@ -434,7 +574,7 @@ public class WASScanLauncher{
     	try {
     		QualysCSResponse webAppDetialsResp = apiClient.getWebAppDetails(webAppId);
     		result = webAppDetialsResp.response;
-    		//logger.info("API RESPONSE : " + result.toString());
+//    		logger.info("API RESPONSE : " + result.toString());
     		JsonElement respEl = result.get("ServiceResponse");
    			JsonObject respObj = respEl.getAsJsonObject();
    			JsonElement respCodeObj = respObj.get("responseCode");
