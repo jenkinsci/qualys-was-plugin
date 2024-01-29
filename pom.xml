@@ -11,7 +11,8 @@
   <groupId>com.qualys.plugins</groupId>
   <artifactId>qualys-was</artifactId>
 
-  <version>2.1.0</version>
+  <version>2.1.0-SNAPSHOT</version>
+
 
   <packaging>hpi</packaging>
 
