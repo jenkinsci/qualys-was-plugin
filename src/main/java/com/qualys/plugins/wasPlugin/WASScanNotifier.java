@@ -441,7 +441,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 
 	@Extension
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-		private final String URL_REGEX = "^(https)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+		private final String URL_REGEX = "^(https)://qualysapi\\.[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
 		//		private final String URL_REGEX = "^(https)://qualysapi[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
 		private final String PROXY_REGEX = "^((https?)://)?[-a-zA-Z0-9+&@#/%?=~_|!,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
 		private final String TIMEOUT_PERIOD_REGEX = "^(\\d+[*]?)*(?<!\\*)$";
@@ -517,7 +517,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 				Matcher matcher = patt.matcher(server);
 
 				if (!(matcher.matches())) {
-					return FormValidation.error("Server name is not valid!");
+					return FormValidation.error("Server name is not valid! Please use the correct format, refer- https://www.qualys.com/platform-identification/");
 				} else {
 					return FormValidation.ok();
 				}
@@ -746,12 +746,6 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 						Map<String, String> platformObj = Helper.platformsList.get(platform);
 						server = platformObj.get("url");
 					}
-					else{
-						String PCP_URL_PREFIX = "https://qualysgateway.";
-						String [] arr = server.split("\\.");
-						String rest_url=String.join(".", Arrays.copyOfRange(arr, 1, arr.length));
-						server = PCP_URL_PREFIX + rest_url;
-					}
 					QualysCSClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
 					logger.info("Fetching web applications list ... ");
 					JsonArray dataList = getDataList("webAppList", client);
@@ -787,13 +781,6 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 					if(!platform.equalsIgnoreCase("pcp")) {
 						Map<String, String> platformObj = Helper.platformsList.get(platform);
 						server = platformObj.get("url");
-					}
-					else{
-						String PCP_URL_PREFIX = "https://qualysgateway.";
-						String [] arr = server.split("\\.");
-						String rest_url=String.join(".", Arrays.copyOfRange(arr, 1, arr.length));
-						server = PCP_URL_PREFIX + rest_url;
-
 					}
 					QualysCSClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
 					logger.info("Fetching Auth Records list ... ");
@@ -831,12 +818,6 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 					if(!platform.equalsIgnoreCase("pcp")) {
 						Map<String, String> platformObj = Helper.platformsList.get(platform);
 						server = platformObj.get("url");
-					}
-					else{
-						String PCP_URL_PREFIX = "https://qualysgateway.";
-						String [] arr = server.split("\\.");
-						String rest_url=String.join(".", Arrays.copyOfRange(arr, 1, arr.length));
-						server = PCP_URL_PREFIX + rest_url;
 					}
 					QualysCSClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
 					logger.info("Fetching Option Profiles list ... ");
@@ -920,59 +901,57 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 
 			item.checkPermission(Item.CONFIGURE);
 			try {
-				String server = apiServer != null ? apiServer.trim() : "";
-				//set apiServer URL according to platform
-				if(!platform.equalsIgnoreCase("pcp")) {
-					Map<String, String> platformObj = Helper.platformsList.get(platform);
-					server = platformObj.get("url");
+				if (doCheckApiServer(apiServer) != FormValidation.ok() && platform.equalsIgnoreCase("pcp")) {
+					return FormValidation.error("Connection test failed.");
 				}
-				else{
-					String PCP_URL_PREFIX = "https://qualysgateway.";
-					String [] arr = server.split("\\.");
-					String rest_url=String.join(".", Arrays.copyOfRange(arr, 1, arr.length));
-					server = PCP_URL_PREFIX + rest_url;
-				}
-				logger.info("Using qualys API Server URL: " + server);
-				logger.info("Using credentials id: " + credsId);
-				String apiUser = "";
-				String apiPass = "";
-				if (StringUtils.isNotEmpty(credsId)) {
-
-					StandardUsernamePasswordCredentials c = CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(
-									StandardUsernamePasswordCredentials.class,
-									item,
-									null,
-									Collections.<DomainRequirement>emptyList()),
-							CredentialsMatchers.withId(credsId));
-
-					apiUser = (c != null ? c.getUsername() : "");
-					apiPass = (c != null ? c.getPassword().getPlainText() : "");
-				}
-				logger.info("UserName: " + apiUser);
-				int proxyPortInt = (doCheckProxyPort(proxyPort)==FormValidation.ok()) ? Integer.parseInt(proxyPort) : 80;
-				QualysAuth auth = new QualysAuth();
-				auth.setQualysCredentials(server, apiUser, apiPass);
-				if(useProxy) {
-					String proxyUsername = "";
-					String proxyPassword = "";
-					if (StringUtils.isNotEmpty(proxyCredentialsId)) {
+				else {
+					String server = apiServer != null ? apiServer.trim() : "";
+					//set apiServer URL according to platform
+					if (!platform.equalsIgnoreCase("pcp")) {
+						Map<String, String> platformObj = Helper.platformsList.get(platform);
+						server = platformObj.get("url");
+					}
+					logger.info("Using qualys API Server URL: " + server);
+					logger.info("Using credentials id: " + credsId);
+					String apiUser = "";
+					String apiPass = "";
+					if (StringUtils.isNotEmpty(credsId)) {
 
 						StandardUsernamePasswordCredentials c = CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(
 										StandardUsernamePasswordCredentials.class,
 										item,
 										null,
 										Collections.<DomainRequirement>emptyList()),
-								CredentialsMatchers.withId(proxyCredentialsId));
+								CredentialsMatchers.withId(credsId));
 
-						proxyUsername = (c != null ? c.getUsername() : "");
-						proxyPassword = (c != null ? c.getPassword().getPlainText() : "");
+						apiUser = (c != null ? c.getUsername() : "");
+						apiPass = (c != null ? c.getPassword().getPlainText() : "");
 					}
-					auth.setProxyCredentials(proxyServer, proxyPortInt, proxyUsername, proxyPassword);
-				}
-				QualysCSClient client = new QualysCSClient(auth, System.out);
-				client.testConnection();
-				return FormValidation.ok("Connection test successful!");
+					logger.info("UserName: " + apiUser);
+					int proxyPortInt = (doCheckProxyPort(proxyPort) == FormValidation.ok()) ? Integer.parseInt(proxyPort) : 80;
+					QualysAuth auth = new QualysAuth();
+					auth.setQualysCredentials(server, apiUser, apiPass);
+					if (useProxy) {
+						String proxyUsername = "";
+						String proxyPassword = "";
+						if (StringUtils.isNotEmpty(proxyCredentialsId)) {
 
+							StandardUsernamePasswordCredentials c = CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(
+											StandardUsernamePasswordCredentials.class,
+											item,
+											null,
+											Collections.<DomainRequirement>emptyList()),
+									CredentialsMatchers.withId(proxyCredentialsId));
+
+							proxyUsername = (c != null ? c.getUsername() : "");
+							proxyPassword = (c != null ? c.getPassword().getPlainText() : "");
+						}
+						auth.setProxyCredentials(proxyServer, proxyPortInt, proxyUsername, proxyPassword);
+					}
+					QualysCSClient client = new QualysCSClient(auth, System.out);
+					client.testConnection();
+					return FormValidation.ok("Connection test successful!");
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				return FormValidation.error("Connection test failed. (Reason: " + e.getMessage() + ")");
@@ -1189,12 +1168,6 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 			setApiServer(platformObj.get("url"));
 			logger.info("Using qualys API Server URL: " + apiServer);
 			portalUrl = platformObj.get("portal");
-		}
-		else{
-			String PCP_URL_PREFIX = "https://qualysgateway.";
-			String [] arr = portalUrl.split("\\.");
-			String rest_url=String.join(".", Arrays.copyOfRange(arr, 1, arr.length));
-			portalUrl = PCP_URL_PREFIX + rest_url;
 		}
 		listener.getLogger().println("Qualys Platform: " + platform +". Using Qualys API server: " + apiServer);
 		String apiUser = "";
