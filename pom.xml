@@ -11,7 +11,7 @@
   <groupId>com.qualys.plugins</groupId>
   <artifactId>qualys-was</artifactId>
 
-  <version>2.1.1-SNAPSHOT</version>
+  <version>2.1.1</version>
 
 
   <packaging>hpi</packaging>
@@ -111,7 +111,7 @@
 	<connection>scm:git:ssh://github.com/jenkinsci/qualys-was-plugin.git</connection>
 	<developerConnection>scm:git:ssh://git@github.com/jenkinsci/qualys-was-plugin.git</developerConnection>
 	<url>https://github.com/jenkinsci/qualys-was-plugin</url>
-    <tag>HEAD</tag>
+    <tag>qualys-was-2.1.1</tag>
 </scm>
 <organization>
 	<name>Qualys Inc.</name>
