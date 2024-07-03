@@ -104,7 +104,7 @@ function showVulnsTable(scanResult){
      jQuery('.severity-dropdown').on('change', function(e){
 	    	 var optionSelected = jQuery("option:selected", this);
 			 var valueSelected = this.value;
-			 table.columns(3).search( valueSelected ).draw();
+			 table.columns(4).search( valueSelected ).draw();
 	    });
     
      jQuery(".custom-filter-checkbox").on("change", function(e){

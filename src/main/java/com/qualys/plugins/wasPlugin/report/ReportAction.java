@@ -70,8 +70,7 @@ public class ReportAction implements Action {
 		this.proxyUsername = proxyUsername;
 		this.proxyPassword = proxyPassword;
 		this.portalUrl = portalUrl;
-
-		this.reportUrl = (portalUrl.endsWith("/")? portalUrl : portalUrl + "/") + "portal-front/module/was/#forward=/module/was/&scan-report=" + scanId;
+		this.reportUrl = (portalUrl.endsWith("/")? portalUrl : portalUrl + "/") + "was/#/reports/online-reports/email-report/scan/" + scanId;
 
 		this.run = run;
 	}
