@@ -54,6 +54,5 @@ In the Timeout settings, specify the polling frequency in minutes for collecting
 
 If you are configuring pipeline project, click the `Generate Pipeline Script` button/link. It will give you a command which you can copy and paste in your project's pipeline script. 
 
-### Release notes for v2.1.1-
-* Field Validation is added for PCP API Server URL as per the Qualys API standards. Please refer to https://www.qualys.com/platform-identification/ for more.
-* PCP API Server URL and credentials should be managed by the user and should be from trusted source.
+### Release notes for v2.1.3-
+* Updated scan report URL to support new Qualys WAS UI.
