@@ -8,7 +8,6 @@
     import com.google.gson.JsonParser;
     import com.qualys.plugins.wasPlugin.QualysAuth.QualysAuth;
 
-    import com.sun.org.apache.xerces.internal.impl.dtd.XMLElementDecl;
     import org.apache.http.HttpEntity;
     import org.apache.http.client.methods.CloseableHttpResponse;
     import org.apache.http.client.methods.HttpGet;
@@ -24,9 +23,7 @@
     import java.util.logging.Logger;
 
     import org.apache.http.util.EntityUtils;
-    import org.json.JSONArray;
     import org.json.JSONObject;
-    import org.json.XML;
 
     public class QualysCSClient extends QualysBaseClient {
         HashMap<String, String> apiMap;

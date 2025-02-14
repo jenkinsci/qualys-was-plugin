@@ -30,7 +30,6 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.qualys.plugins.wasPlugin.WASScanNotifier;
 import com.qualys.plugins.wasPlugin.QualysAuth.QualysAuth;
 import com.qualys.plugins.wasPlugin.QualysClient.QualysCSClient;
 import com.qualys.plugins.wasPlugin.QualysClient.QualysCSResponse;
@@ -43,7 +42,6 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import hudson.util.Secret;
 import hudson.util.ListBoxModel.Option;
 import jenkins.model.Jenkins;
 
