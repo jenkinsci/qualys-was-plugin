@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -252,4 +254,49 @@ public class Helper {
 			}
 		}
 	}
+
+    public static String getGatewayUrl(String apiServerUrl) throws IllegalArgumentException {
+        try {
+            URI uri = new URI(apiServerUrl);
+            String domain = uri.getHost();
+
+            if (domain.contains("gateway"))
+                return apiServerUrl;
+            if (!domain.startsWith("qualysapi.")) {
+                throw new IllegalArgumentException("Input URL must start with 'qualysapi.'");
+            }
+            String gatewayDomain;
+            if (domain.equals("qualysapi.qualys.com"))
+                gatewayDomain = "gateway.qg1.apps.qualys.com";
+            else if (domain.equals("qualysapi.qualys.eu"))
+                gatewayDomain = "gateway.qg1.apps.qualys.eu";
+            else if (domain.matches("qualysapi\\.(qg[1-9]\\.)?apps\\.qualys.+")) {
+                gatewayDomain = domain.replaceFirst("qualysapi\\.", "gateway.");
+            } else if (domain.contains("qualysapi.") && domain.contains("qualys.com")) {
+                gatewayDomain = domain.replaceFirst("qualysapi\\.", "gateway.");
+            } else {
+                //private platform url
+                gatewayDomain = domain.replaceFirst("qualysapi\\.", "qualysgateway.");
+                return new URI(uri.getScheme(), gatewayDomain, uri.getPath(), uri.getQuery(), uri.getFragment()).toString();
+            }
+
+            return new URI(uri.getScheme(), gatewayDomain, uri.getPath(), uri.getQuery(), uri.getFragment()).toString();
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Invalid URL format: " + apiServerUrl, e);
+        }
+    }
+
+    public static String buildMaskedLabel(String idPart, String maskedSecret, String description, String id) {
+        String base = (idPart != null && !idPart.trim().isEmpty()) ? idPart.trim() : "";
+        String label = base.isEmpty() ? maskedSecret : (base + "/" + maskedSecret);
+        if (description != null && !description.trim().isEmpty()) {
+            label += " (" + description.trim() + ")";
+        }
+        return label;
+    }
+
+    public static String safe(String s) {
+        return s == null ? "" : s;
+    }
+
 }

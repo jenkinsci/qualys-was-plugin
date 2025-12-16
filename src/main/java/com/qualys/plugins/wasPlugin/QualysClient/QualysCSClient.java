@@ -8,7 +8,7 @@
     import com.google.gson.JsonParser;
     import com.qualys.plugins.wasPlugin.QualysAuth.QualysAuth;
 
-    import com.sun.org.apache.xerces.internal.impl.dtd.XMLElementDecl;
+    import com.qualys.plugins.wasPlugin.util.Helper;
     import org.apache.http.HttpEntity;
     import org.apache.http.client.methods.CloseableHttpResponse;
     import org.apache.http.client.methods.HttpGet;
@@ -16,20 +16,18 @@
     import org.apache.http.entity.ByteArrayEntity;
     import org.apache.http.entity.StringEntity;
     import org.apache.http.impl.client.CloseableHttpClient;
-    import java.io.BufferedReader;
-    import java.io.InputStreamReader;
-    import java.io.PrintStream;
+
+    import java.io.*;
     import java.net.URL;
     import java.util.HashMap;
     import java.util.logging.Logger;
 
     import org.apache.http.util.EntityUtils;
-    import org.json.JSONArray;
+
     import org.json.JSONObject;
-    import org.json.XML;
 
     public class QualysCSClient extends QualysBaseClient {
-        HashMap<String, String> apiMap;
+        public HashMap<String, String> apiMap;
         Logger logger = Logger.getLogger(QualysCSClient.class.getName());
 
         public QualysCSClient(QualysAuth auth) {
@@ -44,6 +42,7 @@
 
         private void populateApiMap() {
             this.apiMap = new HashMap<>();
+            this.apiMap.put("getOAuthToken", "/auth/oidc");
             this.apiMap.put("getScanResult", "/qps/rest/3.0/download/was/wasscan/");
             this.apiMap.put("getScanDetails", "/qps/rest/3.0/get/was/wasscan/");
             this.apiMap.put("getWebAppCount", "/qps/rest/3.0/count/was/webapp");
@@ -139,8 +138,7 @@
                 httpclient = this.getHttpClient();
 
                 HttpGet getRequest = new HttpGet(url.toString());
-                getRequest.addHeader("accept", "application/json");
-                getRequest.addHeader("Authorization", "Basic " +  this.getBasicAuthHeader());
+                this.getCommonHeaders().forEach(getRequest::addHeader);
                 CloseableHttpResponse response = httpclient.execute(getRequest);
                 apiResponse.responseCode = response.getStatusLine().getStatusCode();
                 logger.info("Server returned with ResponseCode: "+ apiResponse.responseCode);
@@ -174,7 +172,6 @@
         private String getKbApiCall(String apiPath) {
             //Added new class QualysWasResponse with String type
 //            QualysWasResponse apiResponse = new QualysWasResponse();
-            String apiResponseString = "";
             String responseContent="";
             CloseableHttpClient httpclient = null;
 
@@ -184,12 +181,9 @@
                 httpclient = this.getHttpClient();
 
                 HttpGet getRequest = new HttpGet(url.toString());
-                getRequest.addHeader("accept", "application/xml");
+                this.getCommonHeaders().forEach(getRequest::addHeader);
                 getRequest.addHeader("X-Requested-With", "Jenkins");
-                getRequest.addHeader("Authorization", "Basic " +  this.getBasicAuthHeader());
                 CloseableHttpResponse response = httpclient.execute(getRequest);
-//                apiResponse.responseCode = response.getStatusLine().getStatusCode();
-//                logger.info("Server returned with ResponseCode: "+ apiResponse.responseCode);
                 if(response.getEntity()!=null) {
                     JSONObject responseJson = new JSONObject();
                     responseJson.put("statusCode", response.getStatusLine().getStatusCode());
@@ -205,8 +199,6 @@
                 }
 
             }catch (Exception e) {
-//                apiResponse.errored = true;
-//                apiResponse.errorMessage = e.getMessage();
                 logger.info("Error occured in getKBApi call: "+ e.getMessage());
             }
 
@@ -224,14 +216,15 @@
                 httpclient = this.getHttpClient();
 
                 HttpPost postRequest = new HttpPost(url.toString());
-                postRequest.addHeader("accept", "application/json");
-                postRequest.addHeader("Authorization", "Basic " +  this.getBasicAuthHeader());
+                this.getCommonHeaders().forEach(postRequest::addHeader);
                 Gson gson = new Gson();
                 if(requestDataJson != null) {
+                    postRequest.removeHeaders("Content-Type");
                     postRequest.addHeader("Content-Type", "application/json");
                     StringEntity entity = new StringEntity(gson.toJson(requestDataJson));
                     postRequest.setEntity(entity);
                 }else if(requestXmlString != null) {
+                    postRequest.removeHeaders("Content-Type");
                     postRequest.addHeader("Content-Type", "application/xml");
                     HttpEntity entity = new ByteArrayEntity(requestXmlString.getBytes("UTF-8"));
                     postRequest.setEntity(entity);
@@ -265,5 +258,6 @@
 
             return apiResponse;
         }
+
 
     }

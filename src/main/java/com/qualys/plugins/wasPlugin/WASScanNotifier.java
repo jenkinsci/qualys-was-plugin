@@ -15,6 +15,10 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.qualys.plugins.wasPlugin.QualysAuth.AuthType;
+import com.qualys.plugins.wasPlugin.util.OAuthCredential;
+import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -63,12 +67,16 @@ import com.google.gson.reflect.TypeToken;
 
 import com.google.gson.JsonObject;
 
+import static com.qualys.plugins.wasPlugin.util.Helper.buildMaskedLabel;
+import static com.qualys.plugins.wasPlugin.util.Helper.safe;
+
 @Extension
 public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 	private final static String SCAN_NAME = "[job_name]_jenkins_build_[build_number]";
 	private final static int PROXY_PORT = 80;
 	private String platform;
 	private String apiServer;
+    private AuthType authType;
 	private String credsId;
 	private String webAppId;
 	private String scanName = SCAN_NAME;
@@ -552,11 +560,25 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 					return result.add(credsId);
 				}
 			}
-			return result
-					.withEmptySelection()
-					.withAll(CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class, item, null, Collections.<DomainRequirement>emptyList()))
-					.withMatching(CredentialsMatchers.withId(credsId));
-		}
+            result.includeEmptyValue();
+            // Username/Password: show "username (desc)"
+            for (StandardUsernamePasswordCredentials c : CredentialsProvider.lookupCredentials(
+                    StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM, Collections.emptyList())) {
+                String label = buildMaskedLabel(c.getUsername(), "*****", c.getDescription(), c.getId());
+                result.add(label, c.getId());
+            }
+
+            // OAuth: show "clientId (desc)"
+            for (OAuthCredential c : CredentialsProvider.lookupCredentials(
+                    OAuthCredential.class, item, ACL.SYSTEM, Collections.emptyList())) {
+                String clientId = safe(c.getClientId());
+                String label = buildMaskedLabel(clientId, "*****", c.getDescription(), c.getId());
+                result.add(label, c.getId());
+            }
+
+            return result.includeCurrentValue(credsId);
+
+        }
 
 		@POST
 		public ListBoxModel doFillProxyCredentialsIdItems(@AncestorInPath Item item, @QueryParameter String proxyCredentialsId) {
@@ -579,22 +601,42 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 		}
 
 		public QualysCSClient getQualysClient(String apiServer, String credsId, boolean useProxy, String proxyServer,
-											  String proxyPort, String proxyCredentialsId, Item item) {
+                                              String proxyPort, String proxyCredentialsId, Item item) throws Exception {
 			String apiUser = "";
 			String apiPass = "";
 			String proxyUsername = "";
 			String proxyPassword = "";
+            String clientId = "";
+            String clientSecret = "";
+            QualysAuth auth = new QualysAuth();
+            if (StringUtils.isNotBlank(apiServer) && (apiServer.endsWith("/"))) {
+                apiServer = apiServer.substring(0, apiServer.length() - 1);
+            }
 			if (StringUtils.isNotEmpty(credsId)) {
 
-				StandardUsernamePasswordCredentials c = CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(
-								StandardUsernamePasswordCredentials.class,
-								item,
-								null,
-								Collections.<DomainRequirement>emptyList()),
-						CredentialsMatchers.withId(credsId));
-
-				apiUser = (c != null ? c.getUsername() : "");
-				apiPass = (c != null ? c.getPassword().getPlainText() : "");
+                StandardCredentials credentials = CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(
+                                StandardCredentials.class,
+                                item, ACL.SYSTEM,
+                                URIRequirementBuilder.fromUri(apiServer).build()),
+                        CredentialsMatchers.withId(credsId));
+                if (credentials != null) {
+                    if (credentials instanceof StandardUsernamePasswordCredentials) {
+                        StandardUsernamePasswordCredentials userPass = (StandardUsernamePasswordCredentials) credentials;
+                        apiUser = userPass.getUsername();
+                        apiPass = userPass.getPassword().getPlainText();
+                        auth.setQualysCredentials(apiServer, AuthType.Basic, apiUser, apiPass, "", "");
+                        if (apiPass.trim().isEmpty() || apiUser.trim().isEmpty()) {
+                            throw new Exception("Username and/or Password field is empty for credentials id: " + credsId);
+                        }
+                    } else if (credentials instanceof OAuthCredential) {
+                        OAuthCredential oauth = (OAuthCredential) credentials;
+                        clientId = oauth.getClientId();
+                        clientSecret = oauth.getClientSecret();
+                        auth.setQualysCredentials(apiServer, AuthType.OAuth, "", "", clientId, clientSecret);
+                    } else
+                        throw new IllegalArgumentException("Unsupported credential type: " + credentials.getClass());
+                } else
+                    throw new Exception("Could not read credentials for API login : credentials id: " + credsId);
 			}
 			if (StringUtils.isNotEmpty(proxyCredentialsId)) {
 
@@ -608,19 +650,15 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 				proxyUsername = (c != null ? c.getUsername() : "");
 				proxyPassword = (c != null ? c.getPassword().getPlainText() : "");
 			}
-			if(StringUtils.isNotBlank(apiServer) && StringUtils.isNotBlank(apiUser) && StringUtils.isNotBlank(apiPass)) {
-				if (apiServer.endsWith("/")) apiServer = apiServer.substring(0, apiServer.length() - 1);
-				QualysAuth auth = new QualysAuth();
-				auth.setQualysCredentials(apiServer, apiUser, apiPass);
-				if(useProxy) {
+
+            if (useProxy) {
 					int proxyPortInt = (doCheckProxyPort(proxyPort)==FormValidation.ok()) ? Integer.parseInt(proxyPort) : 80;
 					auth.setProxyCredentials(proxyServer, proxyPortInt, proxyUsername, proxyPassword);
 				}
 				QualysCSClient client = new QualysCSClient(auth, System.out);
 				return client;
-			}
-			return null;
-		}
+
+        }
 
 		public ListBoxModel doFillOptionProfileItems() {
 			ListBoxModel model = new ListBoxModel();
@@ -913,36 +951,58 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 					}
 					logger.info("Using qualys API Server URL: " + server);
 					logger.info("Using credentials id: " + credsId);
+                    AuthType authType = AuthType.Basic;
 					String apiUser = "";
 					String apiPass = "";
+                    String clientId = "";
+                    String clientSecret = "";
+                    QualysAuth auth = new QualysAuth();
 					if (StringUtils.isNotEmpty(credsId)) {
 
-						StandardUsernamePasswordCredentials c = CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(
-										StandardUsernamePasswordCredentials.class,
-										item,
-										null,
-										Collections.<DomainRequirement>emptyList()),
-								CredentialsMatchers.withId(credsId));
+                        StandardCredentials credentials = CredentialsMatchers.firstOrNull(
+                                CredentialsProvider.lookupCredentials(
+                                        StandardCredentials.class,
+                                        item, ACL.SYSTEM,
+                                        URIRequirementBuilder.fromUri(apiServer).build()),
+                                CredentialsMatchers.withId(credsId));
+                        if (credentials != null) {
+                            if (credentials instanceof StandardUsernamePasswordCredentials) {
+                                StandardUsernamePasswordCredentials userPass = (StandardUsernamePasswordCredentials) credentials;
+                                authType = AuthType.Basic;
+                                apiUser = userPass.getUsername();
+                                apiPass = userPass.getPassword().getPlainText();
+                                logger.info("UserName: " + apiUser);
+                                auth.setQualysCredentials(apiServer, authType, apiUser, apiPass, "", "");
+                                if (apiPass.trim().equals("") || apiUser.trim().equals("")) {
+                                    throw new Exception("Username and/or Password field is empty for credentials id: " + credsId);
+                                }
+                            } else if (credentials instanceof OAuthCredential) {
+                                OAuthCredential oauth = (OAuthCredential) credentials;
+                                authType = AuthType.OAuth;
+                                clientId = oauth.getClientId();
+                                clientSecret = oauth.getClientSecret();
+                                logger.info("Client id: " + clientId);
+                                auth.setQualysCredentials(apiServer, authType, "", "", clientId, clientSecret);
+                            } else
+                                throw new IllegalArgumentException("Unsupported credential type: " + credentials.getClass());
+                        } else
+                            throw new Exception("Could not read credentials for API login : credentials id: " + credsId);
 
-						apiUser = (c != null ? c.getUsername() : "");
-						apiPass = (c != null ? c.getPassword().getPlainText() : "");
-					}
-					logger.info("UserName: " + apiUser);
+                    }
+
 					int proxyPortInt = (doCheckProxyPort(proxyPort) == FormValidation.ok()) ? Integer.parseInt(proxyPort) : 80;
-					QualysAuth auth = new QualysAuth();
-					auth.setQualysCredentials(server, apiUser, apiPass);
+                    auth.setQualysCredentials(apiServer, authType, apiUser, apiPass, clientId, clientSecret);
 					if (useProxy) {
 						String proxyUsername = "";
 						String proxyPassword = "";
 						if (StringUtils.isNotEmpty(proxyCredentialsId)) {
 
-							StandardUsernamePasswordCredentials c = CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(
-											StandardUsernamePasswordCredentials.class,
-											item,
-											null,
-											Collections.<DomainRequirement>emptyList()),
-									CredentialsMatchers.withId(proxyCredentialsId));
-
+                            StandardUsernamePasswordCredentials c = CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(
+                                            StandardUsernamePasswordCredentials.class,
+                                            item,
+                                            null,
+                                            Collections.<DomainRequirement>emptyList()),
+                                    CredentialsMatchers.withId(proxyCredentialsId));
 							proxyUsername = (c != null ? c.getUsername() : "");
 							proxyPassword = (c != null ? c.getPassword().getPlainText() : "");
 						}
@@ -1172,33 +1232,44 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 		listener.getLogger().println("Qualys Platform: " + platform +". Using Qualys API server: " + apiServer);
 		String apiUser = "";
 		String apiPass = "";
+        String clientId = "";
+        String clientSecret = "";
 		String proxyUsername = "";
 		String proxyPassword = "";
+        AuthType authType;
+        QualysAuth auth = new QualysAuth();
 		try {
-			StandardUsernamePasswordCredentials credential = CredentialsMatchers.firstOrNull(
-					CredentialsProvider.lookupCredentials(
-							StandardUsernamePasswordCredentials.class,
-							project, ACL.SYSTEM,
-							URIRequirementBuilder.fromUri(apiServer).build()),
-					CredentialsMatchers.withId(credsId));
-
-			if (credential != null) {
-				apiUser = credential.getUsername();
-				apiPass = credential.getPassword().getPlainText();
-				if(apiPass.trim().equals("") || apiUser.trim().equals("")) {
-					throw new Exception("Username and/or Password field is empty for credentials id: " + credsId);
-				}
-			}else {
-				throw new Exception("Could not read credentials for credentials id: " + credsId);
-			}
+            StandardCredentials credentials = CredentialsMatchers.firstOrNull(
+                    CredentialsProvider.lookupCredentials(
+                            StandardCredentials.class,
+                            project, ACL.SYSTEM,
+                            URIRequirementBuilder.fromUri(apiServer).build()),
+                    CredentialsMatchers.withId(credsId));
+            if (credentials != null) {
+                if (credentials instanceof StandardUsernamePasswordCredentials) {
+                    StandardUsernamePasswordCredentials userPass = (StandardUsernamePasswordCredentials) credentials;
+                    apiUser = userPass.getUsername();
+                    apiPass = userPass.getPassword().getPlainText();
+                    authType = AuthType.Basic;
+                    auth.setQualysCredentials(apiServer, AuthType.Basic, apiUser, apiPass, "", "");
+                    if (apiPass.trim().isEmpty() || apiUser.trim().isEmpty()) {
+                        throw new Exception("Username and/or Password field is empty for credentials id: " + credsId);
+                    }
+                } else if (credentials instanceof OAuthCredential) {
+                    OAuthCredential oauth = (OAuthCredential) credentials;
+                    authType = AuthType.OAuth;
+                    clientId = oauth.getClientId();
+                    clientSecret = oauth.getClientSecret();
+                    auth.setQualysCredentials(apiServer, AuthType.OAuth, "", "", clientId, clientSecret);
+                } else
+                    throw new IllegalArgumentException("Unsupported credential type: " + credentials.getClass());
+            } else
+                throw new Exception("Could not read credentials for API login : credentials id: " + credsId);
 		}catch(Exception e){
 			e.printStackTrace();
 			//buildLogger.println("Inavlid credentials! " + e.getMessage());
 			throw new Exception("Inavlid credentials! " + e.getMessage());
 		}
-		//test connection first
-		QualysAuth auth = new QualysAuth();
-		auth.setQualysCredentials(apiServer, apiUser, apiPass);
 		if(useProxy) {
 			if (StringUtils.isNotEmpty(proxyCredentialsId)) {
 				StandardUsernamePasswordCredentials credential = CredentialsMatchers.firstOrNull(
@@ -1235,7 +1306,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 
 		WASScanLauncher launcher = new WASScanLauncher(run, listener, webAppID, scanName, scanType, authRecord, optionProfile, cancelOptions, authRecordId,
 				optionProfileId, cancelHours, isFailConditionsConfigured, pollingInterval, vulnsTimeout, getCriteriaAsJsonObject(),
-				apiServer, apiUser, apiPass, useProxy, proxyServer, proxyPort, proxyUsername, proxyPassword, portalUrl, failOnScanError);
+                apiServer, authType, apiUser, apiPass, clientId, clientSecret, useProxy, proxyServer, proxyPort, proxyUsername, proxyPassword, portalUrl, failOnScanError);
 
 		logger.info("Qualys task - Started Launching web app scanning with WAS.");
 		launcher.getAndProcessLaunchScanResult();

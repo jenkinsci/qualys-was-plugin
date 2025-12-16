@@ -56,3 +56,6 @@ If you are configuring pipeline project, click the `Generate Pipeline Script` bu
 
 ### Release notes for v2.1.3-
 * Updated scan report URL to support new Qualys WAS UI.
+
+### Release notes for v3.0.0-
+* Added support for oAuth authentication.

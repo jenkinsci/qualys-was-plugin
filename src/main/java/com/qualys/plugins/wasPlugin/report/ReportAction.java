@@ -3,6 +3,7 @@ package com.qualys.plugins.wasPlugin.report;
 import java.io.File;
 import java.util.logging.Logger;
 
+import com.qualys.plugins.wasPlugin.QualysAuth.AuthType;
 import org.apache.commons.io.FileUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -40,6 +41,9 @@ public class ReportAction implements Action {
 	private String apiServer;
 	private String apiUser;
 	private Secret apiPass;
+    private AuthType authType;
+    private String clientId;
+    private String clientSecret;
 	private boolean useProxy;
 	private String proxyServer;
 	private int proxyPort;
@@ -56,14 +60,17 @@ public class ReportAction implements Action {
 
 	public ReportAction() { }
 
-	public ReportAction(Run<?, ?> run, String scanId, String webAppId, String scanName, String apiServer,
-						String apiUser, Secret apiPass, boolean useProxy, String proxyServer, int proxyPort, String proxyUsername, Secret proxyPassword, String portalUrl) {
+    public ReportAction(Run<?, ?> run, String scanId, String webAppId, String scanName, String apiServer, AuthType authType,
+                        String apiUser, Secret apiPass, String clientId, String clientSecret, boolean useProxy, String proxyServer, int proxyPort, String proxyUsername, Secret proxyPassword, String portalUrl) {
 		this.scanId = scanId;
 		this.scanName = scanName;
 		this.webAppId = webAppId;
 		this.apiServer = apiServer;
 		this.apiUser = apiUser;
 		this.apiPass = apiPass;
+        this.authType = authType;
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
 		this.useProxy = useProxy;
 		this.proxyServer = proxyServer;
 		this.proxyPort = proxyPort;
@@ -104,7 +111,7 @@ public class ReportAction implements Action {
 				respObj = gson.fromJson(resultStr, JsonObject.class);
 			}else {
 				QualysAuth auth = new QualysAuth();
-				auth.setQualysCredentials(apiServer, apiUser, apiPass.getPlainText());
+                auth.setQualysCredentials(apiServer, authType, apiUser, apiPass.getPlainText(), clientId, clientSecret);
 				if(useProxy) {
 					//int proxyPortInt = Integer.parseInt(proxyPort);
 					auth.setProxyCredentials(proxyServer, proxyPort, proxyUsername, proxyPassword.getPlainText());
@@ -314,7 +321,7 @@ public class ReportAction implements Action {
 		JsonObject result = new JsonObject();
 		try {
 			QualysAuth auth = new QualysAuth();
-			auth.setQualysCredentials(apiServer, apiUser, apiPass.getPlainText());
+            auth.setQualysCredentials(apiServer, authType, apiUser, apiPass.getPlainText(), clientId, clientSecret);
 			if(useProxy) {
 				//int proxyPortInt = Integer.parseInt(proxyPort);
 				auth.setProxyCredentials(proxyServer, proxyPort, proxyUsername, proxyPassword.getPlainText());

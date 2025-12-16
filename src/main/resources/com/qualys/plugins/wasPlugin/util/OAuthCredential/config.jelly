@@ -1,0 +1,31 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:entry title="Scope" field="scope">
+        <f:select>
+            <f:option value="" selected="${instance == null || instance.scope == null}">Default</f:option>
+            <j:forEach var="s" items="${descriptor.availableScopes}">
+                <f:option value="${s.name()}"
+                          selected="${instance != null &amp;&amp; instance.scope != null &amp;&amp; instance.scope.name() == s.name()}">
+                    ${s.name()}
+                </f:option>
+            </j:forEach>
+        </f:select>
+    </f:entry>
+
+    <f:entry title="Client ID" field="clientId">
+        <f:textbox value="${instance != null ? instance.clientId : ''}"/>
+    </f:entry>
+
+    <f:entry title="Client Secret" field="clientSecret">
+        <f:password value="${instance != null ? instance.clientSecret : ''}"/>
+    </f:entry>
+
+    <f:entry title="ID" field="id">
+        <f:textbox value="${instance != null ? instance.id : ''}"/>
+    </f:entry>
+
+    <f:entry title="Description" field="description">
+        <f:textbox value="${instance != null ? instance.description : ''}"/>
+    </f:entry>
+</j:jelly>
+

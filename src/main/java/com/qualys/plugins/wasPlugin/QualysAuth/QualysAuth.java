@@ -2,11 +2,8 @@ package com.qualys.plugins.wasPlugin.QualysAuth;
 
 import hudson.util.Secret;
 
-enum AuthType {
-    Basic, OAuth
-}
-
 public class QualysAuth {
+    private AuthType authType;
     private String server;
     private String username;
     private Secret password;
@@ -15,6 +12,8 @@ public class QualysAuth {
     private String proxyUsername;
     private Secret proxyPassword;
     private int proxyPort;
+    private String clientId;
+    private String clientSecret;
 
     public QualysAuth () {
         
@@ -24,6 +23,9 @@ public class QualysAuth {
         this.authKey = oauthKey;
     }
 
+    public AuthType getAuthType() {
+        return authType;
+    }
     public String getServer() {
         return server;
     }
@@ -53,11 +55,29 @@ public class QualysAuth {
     public String getAuthKey() {
         return authKey;
     }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public String getClientSecret() {
+        return clientSecret;
+    }
+
    
     public void setQualysCredentials(String server, String username, String password) {
     	this.server = server;
         this.username = username;
         this.password = Secret.fromString(password);
+    }
+
+    public void setQualysCredentials(String server, AuthType authType, String username, String password, String clientId, String clientSecret) {
+        this.authType = authType;
+        this.server = server;
+        this.username = username;
+        this.password = Secret.fromString(password);
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
     }
     public void setProxyCredentials(String proxyServer, int proxyPort, String proxyUsername, String proxyPassword) {
     	this.proxyServer = proxyServer;
