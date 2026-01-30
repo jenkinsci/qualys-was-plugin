@@ -19,13 +19,14 @@ import hudson.Extension;
 import hudson.model.Action;
 import hudson.model.Run;
 import hudson.util.Secret;
+import jenkins.model.RunAction2;
 import net.sf.json.JSONObject;
 import org.json.XML;
 import java.util.ArrayList;
 import java.sql.Timestamp;
 import org.json.JSONArray;
 @Extension
-public class ReportAction implements Action {
+public class ReportAction implements Action, RunAction2 {
 	private String scanId;
 	private String status;
 	private String scanReference;
@@ -59,6 +60,16 @@ public class ReportAction implements Action {
 	private final static Logger logger = Helper.getLogger(ReportAction.class.getName());
 
 	public ReportAction() { }
+
+    @Override
+    public void onAttached(Run<?, ?> run) {
+        this.run = run;
+    }
+
+    @Override
+    public void onLoad(Run<?, ?> run) {
+        this.run = run;
+    }
 
     public ReportAction(Run<?, ?> run, String scanId, String webAppId, String scanName, String apiServer, AuthType authType,
                         String apiUser, Secret apiPass, String clientId, String clientSecret, boolean useProxy, String proxyServer, int proxyPort, String proxyUsername, Secret proxyPassword, String portalUrl) {
@@ -163,18 +174,22 @@ public class ReportAction implements Action {
 
 					for(int i=0;i<vulnsCount;i++){
 						JsonObject listItem = listArr.get(i).getAsJsonObject();
-						JsonObject WasScanVuln = listItem.getAsJsonObject("WasScanVuln");
-						String qid = WasScanVuln.get("qid").getAsString();
-						String soln = kbData.get(qid+"_solution").getAsString();
-						String diagnosis = kbData.get(qid+"_diagnosis").getAsString();
-						if(!soln.isEmpty() && !diagnosis.isEmpty()){
-							WasScanVuln.addProperty("solution",soln);
-							WasScanVuln.addProperty("diagnosis",diagnosis);
-						}
-						else{
-							logger.info(new Timestamp(System.currentTimeMillis()) + " Kb data not found for qid: " + qid);
-						}
+                        JsonObject WasScanVuln = listItem.getAsJsonObject("WasScanVuln");
 
+                        if (WasScanVuln.has("qid") && !WasScanVuln.get("qid").isJsonNull()) {
+                            String qid = WasScanVuln.get("qid").getAsString();
+                            JsonElement solnElement = kbData.get(qid + "_solution");
+                            JsonElement diagnosisElement = kbData.get(qid + "_diagnosis");
+                            String soln = (solnElement != null && !solnElement.isJsonNull()) ? solnElement.getAsString() : "";
+                            String diagnosis = (diagnosisElement != null && !diagnosisElement.isJsonNull()) ? diagnosisElement.getAsString() : "";
+
+                            if (!soln.isEmpty() && !diagnosis.isEmpty()) {
+                                WasScanVuln.addProperty("solution", soln);
+                                WasScanVuln.addProperty("diagnosis", diagnosis);
+                            } else {
+                                logger.info(new Timestamp(System.currentTimeMillis()) + " Kb data not found for qid: " + qid);
+                            }
+                        }
 					}
 				}
 
@@ -432,26 +447,26 @@ public class ReportAction implements Action {
 			int vulnsCount = vulns.get("count").getAsInt();
 
 			ArrayList<String> batch = new ArrayList<>();
-			for(int i=0;i<vulnsCount;i++){
-				JsonObject listItem = listArr.get(i).getAsJsonObject();
-				JsonObject WasScanVuln = listItem.getAsJsonObject("WasScanVuln");
-//				WasScanVuln.addProperty("solution","test solution");
-				String qid = WasScanVuln.get("qid").getAsString();
+            for (int i = 0; i < vulnsCount; i++) {
+                JsonObject listItem = listArr.get(i).getAsJsonObject();
+                if (listItem.has("WasScanVuln") && !listItem.get("WasScanVuln").isJsonNull()) {
+                    JsonObject WasScanVuln = listItem.getAsJsonObject("WasScanVuln");
+                    if (WasScanVuln.has("qid") && !WasScanVuln.get("qid").isJsonNull()) {
+                        String qid = WasScanVuln.get("qid").getAsString();
+                        batch.add(qid);
 
-				batch.add(qid);
-				if(batch.size() == 500){
-					ArrayList<String> oneBatch = new ArrayList<>(batch);
-					qidBatches.add(oneBatch);
-					batch.clear();
-				}
-				else if(i == vulnsCount-1){
-
-					ArrayList<String>  oneBatch= new ArrayList<>(batch);
-					qidBatches.add(oneBatch);
-					batch.clear();
-				}
-
-			}
+                        if (batch.size() == 500) {
+                            ArrayList<String> oneBatch = new ArrayList<>(batch);
+                            qidBatches.add(oneBatch);
+                            batch.clear();
+                        } else if (i == vulnsCount - 1) {
+                            ArrayList<String> oneBatch = new ArrayList<>(batch);
+                            qidBatches.add(oneBatch);
+                            batch.clear();
+                        }
+                    }
+                }
+            }
 			batchResult = processBatch(qidBatches);
 			return batchResult;
 		}
@@ -476,8 +491,8 @@ public class ReportAction implements Action {
 					org.json.JSONObject kbVulnList = kbResponse.getJSONObject("VULN_LIST");
 					String scanResultString = gson.toJson(kbData);
 					JSONArray kbVulns = kbVulnList.getJSONArray("VULN");
-					for (i = 0; i < kbVulns.length(); i++) {
-						org.json.JSONObject listItem = kbVulns.getJSONObject(i);
+                    for (int j = 0; j < kbVulns.length(); j++) {
+                        org.json.JSONObject listItem = kbVulns.getJSONObject(j);
 						String qid = Integer.toString(listItem.getInt("QID"));
 						String solution = listItem.getString("SOLUTION");
 						String diagnosis = listItem.getString("DIAGNOSIS");

@@ -35,12 +35,12 @@ public class OAuthCredential extends BaseStandardCredentials {
     }
 
     @Extension
-    @Symbol("qualysOAuthCredential")
+    @Symbol("qualysOAuthCredential_was")
     public static class DescriptorImpl extends BaseStandardCredentialsDescriptor {
 
         @Override
         public String getDisplayName() {
-            return "OAuth Credential";
+            return "Qualys WAS OAuth Credential";
         }
 
         // Expose scopes to Jelly
