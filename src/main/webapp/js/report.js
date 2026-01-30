@@ -1,4 +1,8 @@
 function showVulnsTable(scanResult){
+	if(!scanResult || !scanResult.vulnsTable || !scanResult.vulnsTable.list) {
+		console.log('vulnsTable data not available');
+		return;
+	}
 	var vulns = scanResult.vulnsTable.list;
 	//Vulns Table
 	var table = jQuery('#vulnsTable').DataTable({             
