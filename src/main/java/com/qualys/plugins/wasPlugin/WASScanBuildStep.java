@@ -972,7 +972,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
                                 StandardUsernamePasswordCredentials userPass = (StandardUsernamePasswordCredentials) credentials;
                                 apiUser = userPass.getUsername();
                                 apiPass = userPass.getPassword().getPlainText();
-                                auth.setQualysCredentials(apiServer, AuthType.Basic, apiUser, apiPass, "", "");
+                                auth.setQualysCredentials(server, AuthType.Basic, apiUser, apiPass, "", "");
                                 if (apiPass.trim().isEmpty() || apiUser.trim().isEmpty()) {
                                     throw new Exception("Username and/or Password field is empty for credentials id: " + credsId);
                                 }
@@ -980,7 +980,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
                                 OAuthCredential oauth = (OAuthCredential) credentials;
                                 clientId = oauth.getClientId();
                                 clientSecret = oauth.getClientSecret();
-                                auth.setQualysCredentials(apiServer, AuthType.OAuth, "", "", clientId, clientSecret);
+                                auth.setQualysCredentials(server, AuthType.OAuth, "", "", clientId, clientSecret);
                             } else
                                 throw new IllegalArgumentException("Unsupported credential type: " + credentials.getClass());
                         } else
