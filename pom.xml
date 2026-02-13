@@ -1,128 +1,136 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.jenkins-ci.plugins</groupId>
-    <artifactId>plugin</artifactId>
-    <version>4.13</version>
-    <relativePath />
-  </parent>
-  <groupId>com.qualys.plugins</groupId>
-  <artifactId>qualys-was</artifactId>
+    <parent>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>plugin</artifactId>
+        <version>4.76</version>
+        <relativePath />
+    </parent>
+    <groupId>com.qualys.plugins</groupId>
+    <artifactId>qualys-was</artifactId>
+    <version>3.0.0-SNAPSHOT</version>
+    <packaging>hpi</packaging>
 
-  <version>2.1.4-SNAPSHOT</version>
+    <properties>
+        <jenkins.version>2.426.2</jenkins.version>
+        <java.version>11</java.version>
+        <java.level>11</java.level>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.jenkins.tools.bom</groupId>
+                <artifactId>bom-2.426.x</artifactId>
+                <version>2779.v391653d9c5da_</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <build>
+        <finalName>${project.artifactId}_${project.version}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
+                </configuration>
+            </plugin>
 
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>3.0.4</version>
+                <configuration>
+                    <failOnError>${maven.findbugs.failure.strict}</failOnError>
+                </configuration>
+            </plugin>
 
-  <packaging>hpi</packaging>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>animal-sniffer-maven-plugin</artifactId>
+                <version>1.26</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
 
-  <properties>
-      <jenkins.version>2.319.3</jenkins.version>
-      <java.version>1.8</java.version>
-    <java.level>8</java.level>
-  </properties>
+        </plugins>
+    </build>
 
-  <build>
-  	<finalName>${project.artifactId}_${project.version}</finalName>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
-      </plugin>
-      
-	<plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>findbugs-maven-plugin</artifactId>
-          <version>3.0.4</version>
-          <configuration>
-            <failOnError>${maven.findbugs.failure.strict}</failOnError>
-          </configuration>
-        </plugin>
-	    
-      <plugin>
-      <groupId>org.codehaus.mojo</groupId>
-      <artifactId>animal-sniffer-maven-plugin</artifactId>
-      <configuration>
-        <skip>true</skip>
-      </configuration>
-    </plugin>
-    
-    </plugins>
-  </build>
+    <name>Qualys Web App Scanning Connector</name>
+    <description>Provides a post-deploy step to run a vulnerability scan using the Qualys Web Application Scanning (WAS) service.</description>
+    <url>https://github.com/jenkinsci/qualys-was-plugin</url>
 
-  <name>Qualys Web App Scanning Connector</name>
-  <description>Provides a post-deploy step to run a vulnerability scan using the Qualys Web Application Scanning (WAS) service.</description>
-  <url>https://github.com/jenkinsci/qualys-was-plugin</url>
-	
-  <licenses>
-    <license>
-      <name>GNU General Public License v3.0</name>
-	  <url>https://www.gnu.org/licenses/gpl-3.0.html</url>
-    </license>
-  </licenses>
+    <licenses>
+        <license>
+            <name>GNU General Public License v3.0</name>
+            <url>https://www.gnu.org/licenses/gpl-3.0.html</url>
+        </license>
+    </licenses>
 
-  <repositories>
-    <repository>
-      <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
-    </pluginRepository>
-  </pluginRepositories>
-  <dependencies>
-	  <dependency>
-	    <groupId>org.jenkins-ci.plugins.workflow</groupId>
-	    <artifactId>workflow-step-api</artifactId>
-          <version>639.v6eca_cd8c04a_a_</version>
-	  </dependency>
-	  <dependency>
-	      <groupId>org.jenkins-ci.plugins</groupId>
-	      <artifactId>credentials</artifactId>
-	      <version>2.6.1.1</version>
-	      <optional>true</optional>
-	  </dependency>
-	  <dependency>
-		<groupId>com.google.code.gson</groupId>
-		<artifactId>gson</artifactId>
-		<version>2.8.9</version>
-	  </dependency>
-  	<dependency>
-		<groupId>org.apache.httpcomponents</groupId>
-		<artifactId>httpclient</artifactId>
-		<version>4.5.13</version>
-	</dependency>
-      <dependency>
-          <groupId>org.json</groupId>
-          <artifactId>json</artifactId>
-          <version>20231013</version>
-      </dependency>
-  
-</dependencies>
+    <repositories>
+        <repository>
+            <id>repo.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/public/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>repo.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+    <dependencies>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-step-api</artifactId>
+            <version>639.v6eca_cd8c04a_a_</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>credentials</artifactId>
+            <version>2.6.1.1</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.9</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.13</version>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20231013</version>
+        </dependency>
 
-<scm>
-	<connection>scm:git:ssh://github.com/jenkinsci/qualys-was-plugin.git</connection>
-	<developerConnection>scm:git:ssh://git@github.com/jenkinsci/qualys-was-plugin.git</developerConnection>
-	<url>https://github.com/jenkinsci/qualys-was-plugin</url>
-    <tag>HEAD</tag>
-</scm>
-<organization>
-	<name>Qualys Inc.</name>
-	<url>https://www.qualys.com/</url>
-</organization>
+    </dependencies>
 
-<developers>
-	<developer>
-		<id>Qualys</id>
-		<name>Qualys Inc.</name>
-		<email>plugins@qualys.com</email>
-	</developer>
-</developers>
+    <scm>
+        <connection>scm:git:ssh://github.com/jenkinsci/qualys-was-plugin.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/jenkinsci/qualys-was-plugin.git</developerConnection>
+        <url>https://github.com/jenkinsci/qualys-was-plugin</url>
+        <tag>HEAD</tag>
+    </scm>
+    <organization>
+        <name>Qualys Inc.</name>
+        <url>https://www.qualys.com/</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <id>Qualys</id>
+            <name>Qualys Inc.</name>
+            <email>plugins@qualys.com</email>
+        </developer>
+    </developers>
 </project>

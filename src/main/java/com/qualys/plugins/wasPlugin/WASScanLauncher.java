@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
+import com.qualys.plugins.wasPlugin.QualysAuth.AuthType;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.gson.JsonArray;
@@ -51,8 +51,11 @@ public class WASScanLauncher{
     private String portalUrl;
     
     private String apiServer;
+    private AuthType authType;
     private String apiUser;
     private Secret apiPass;
+    private String clientId;
+    private String clientSecret;
     private boolean useProxy;
     private String proxyServer;
     private int proxyPort;
@@ -74,9 +77,9 @@ public class WASScanLauncher{
 	private ArrayList<ArrayList<String>> qidBatches = new ArrayList<>();
 
     public WASScanLauncher(Run<?, ?> run, TaskListener listener, String webAppId, String scanName,
-    		String scanType, String authRecord, String optionProfile, String cancelOptions, String authRecordId,
-    		String optionProfileId, String cancelHours, boolean isFailConditionsConfigured, String pollingIntervalStr, String vulnsTimeoutStr, JsonObject criteriaObject, 
-    		String apiServer, String apiUser, String apiPass, boolean useProxy, String proxyServer, int proxyPort, String proxyUsername, String proxyPassword, String portalUrl, boolean failOnScanError) {
+                           String scanType, String authRecord, String optionProfile, String cancelOptions, String authRecordId,
+                           String optionProfileId, String cancelHours, boolean isFailConditionsConfigured, String pollingIntervalStr, String vulnsTimeoutStr, JsonObject criteriaObject,
+                           String apiServer, AuthType authType, String apiUser, String apiPass, String clientId, String clientSecret, boolean useProxy, String proxyServer, int proxyPort, String proxyUsername, String proxyPassword, String portalUrl, boolean failOnScanError) {
     	this.run = run;
         this.listener = listener;
         this.webAppId = webAppId;
@@ -90,8 +93,12 @@ public class WASScanLauncher{
         this.cancelHours = cancelHours;
         
         this.apiServer = apiServer;
+        this.authType = authType;
         this.apiUser = apiUser;
         this.apiPass = Secret.fromString(apiPass);
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+
         this.useProxy = useProxy;
         this.proxyServer = proxyServer;
         this.proxyPort = proxyPort;
@@ -108,7 +115,7 @@ public class WASScanLauncher{
         this.isFailConditionsConfigured = isFailConditionsConfigured;
         
         QualysAuth auth = new QualysAuth();
-    	auth.setQualysCredentials(apiServer, apiUser, apiPass);
+        auth.setQualysCredentials(apiServer, authType, apiUser, apiPass, clientId, clientSecret);
     	if(useProxy) {
         	//int proxyPortInt = Integer.parseInt(proxyPort);
         	auth.setProxyCredentials(proxyServer, proxyPort, proxyUsername, proxyPassword);
@@ -160,7 +167,7 @@ public class WASScanLauncher{
 				}
 	    		
 	    		//create status link on right side
-	    		ReportAction action = new ReportAction(run, scanId, webAppId, scanName, apiServer, apiUser, apiPass, useProxy, proxyServer, proxyPort, proxyUsername, proxyPassword, portalUrl);
+                ReportAction action = new ReportAction(run, scanId, webAppId, scanName, apiServer, authType, apiUser, apiPass, clientId, clientSecret, useProxy, proxyServer, proxyPort, proxyUsername, proxyPassword, portalUrl);
 				run.addAction(action);
 				
 				if(isFailConditionsConfigured && !buildPassed) {
