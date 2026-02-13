@@ -58,4 +58,5 @@ If you are configuring pipeline project, click the `Generate Pipeline Script` bu
 * Updated scan report URL to support new Qualys WAS UI.
 
 ### Release notes for v3.0.0-
-* Added support for oAuth2 authentication with Qualys clientId and client Sceret.
+* Added support for oAuth2 Authentication with Qualys ClientId and Client Sceret.
+* Added support for KSA pod
