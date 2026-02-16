@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.qualys.plugins</groupId>
     <artifactId>qualys-was</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.0.0</version>
     <packaging>hpi</packaging>
 
     <properties>
@@ -119,7 +119,7 @@
         <connection>scm:git:ssh://github.com/jenkinsci/qualys-was-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/jenkinsci/qualys-was-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/qualys-was-plugin</url>
-        <tag>HEAD</tag>
+        <tag>qualys-was-3.0.0</tag>
     </scm>
     <organization>
         <name>Qualys Inc.</name>
