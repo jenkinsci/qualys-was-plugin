@@ -453,9 +453,9 @@ public class WASScanBuildStep extends AbstractStepImpl {
 	@Extension
 	public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
 
-		private final String URL_REGEX = "^(https)://qualysapi\\.[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
-		private final String PROXY_REGEX = "^((https?)://)?[-a-zA-Z0-9+&@#/%?=~_|!,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
-		private final String TIMEOUT_PERIOD_REGEX = "^(\\d+[*]?)*(?<!\\*)$";
+		private static final String URL_REGEX = "^(https)://qualysapi\\.[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+		private static final String PROXY_REGEX = "^((https?)://)?[-a-zA-Z0-9+&@#/%?=~_|!,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+		private static final String TIMEOUT_PERIOD_REGEX = "^(\\d+[*]?)*(?<!\\*)$";
 
 		public DescriptorImpl() {
 			super(WASScanBuildExecution.class);
@@ -471,7 +471,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
 			if(string != null && !string.isEmpty()) {
 				try
 				{
-					byte[] bytes = string.getBytes("UTF-8");
+					string.getBytes("UTF-8");
 				}
 				catch (UnsupportedEncodingException e)
 				{
@@ -551,13 +551,13 @@ public class WASScanBuildStep extends AbstractStepImpl {
 
 		@POST
 		public ListBoxModel doFillCredsIdItems(@AncestorInPath Item item, @QueryParameter String credsId) {
-			item.checkPermission(Item.CONFIGURE);
 			StandardListBoxModel result = new StandardListBoxModel();
 			if (item == null) {
 				if (!Jenkins.getInstance().hasPermission(Item.CONFIGURE)) {
 					return result.add(credsId);
 				}
 			} else {
+				item.checkPermission(Item.CONFIGURE);
 				if (!item.hasPermission(Item.EXTENDED_READ)
 						&& !item.hasPermission(CredentialsProvider.USE_ITEM)) {
 					return result.add(credsId);
@@ -584,13 +584,13 @@ public class WASScanBuildStep extends AbstractStepImpl {
 
 		@POST
 		public ListBoxModel doFillProxyCredentialsIdItems(@AncestorInPath Item item, @QueryParameter String proxyCredentialsId) {
-			item.checkPermission(Item.CONFIGURE);
 			StandardListBoxModel result = new StandardListBoxModel();
 			if (item == null) {
 				if (!Jenkins.getInstance().hasPermission(Item.CONFIGURE)) {
 					return result.add(proxyCredentialsId);
 				}
 			} else {
+				item.checkPermission(Item.CONFIGURE);
 				if (!item.hasPermission(Item.EXTENDED_READ)
 						&& !item.hasPermission(CredentialsProvider.USE_ITEM)) {
 					return result.add(proxyCredentialsId);
@@ -726,6 +726,8 @@ public class WASScanBuildStep extends AbstractStepImpl {
 					case "profileList":
 						resp = client.listOptionProfiles(xmlReqData);
 						break;
+					default:
+						break;
 				}
 			}
 			return resp;
@@ -744,9 +746,13 @@ public class WASScanBuildStep extends AbstractStepImpl {
 						QualysCSResponse resp = callAPIs(api, client, lastId);
 						retry ++;
 
+						if(resp == null) {
+							hasMoreRecords = false;
+							break;
+						}
 						logger.info("Response code received for API "+ api + " call [page="+page+"]: " + resp.responseCode);
 						hasMoreRecords = false;
-						if(resp != null && resp.responseCode == 200) {
+						if(resp.responseCode == 200) {
 							JsonObject response = resp.response;
 							JsonObject serviceResp = response.getAsJsonObject("ServiceResponse");
 							String responseCode = serviceResp.get("responseCode").getAsString();
@@ -802,7 +808,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
 				//return object;
 			}
 
-			model.sort(Helper.OptionItemmsComparator);
+			model.sort(Helper.optionItemsComparator);
 			return model.withEmptySelection();
 		}
 
@@ -839,7 +845,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
 				e.printStackTrace();
 				//return object;
 			}
-			model.sort(Helper.OptionItemmsComparator);
+			model.sort(Helper.optionItemsComparator);
 			return model.withEmptySelection();
 		}
 
@@ -875,7 +881,7 @@ public class WASScanBuildStep extends AbstractStepImpl {
 				e.printStackTrace();
 				//return object;
 			}
-			model.sort(Helper.OptionItemmsComparator);
+			model.sort(Helper.optionItemsComparator);
 			return model.withEmptySelection();
 		}
 

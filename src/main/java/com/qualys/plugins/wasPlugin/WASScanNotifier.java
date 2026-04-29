@@ -451,10 +451,10 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-        private final String URL_REGEX = "^(https)://qualysapi\\.[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
-        //		private final String URL_REGEX = "^(https)://qualysapi[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
-        private final String PROXY_REGEX = "^((https?)://)?[-a-zA-Z0-9+&@#/%?=~_|!,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
-        private final String TIMEOUT_PERIOD_REGEX = "^(\\d+[*]?)*(?<!\\*)$";
+        private static final String URL_REGEX = "^(https)://qualysapi\\.[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+        //		private static final String URL_REGEX = "^(https)://qualysapi[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+        private static final String PROXY_REGEX = "^((https?)://)?[-a-zA-Z0-9+&@#/%?=~_|!,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+        private static final String TIMEOUT_PERIOD_REGEX = "^(\\d+[*]?)*(?<!\\*)$";
 
         @Override
         public String getDisplayName() {
@@ -469,7 +469,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
         public boolean isNonUTF8String(String string) {
             if (string != null && !string.isEmpty()) {
                 try {
-                    byte[] bytes = string.getBytes("UTF-8");
+                    string.getBytes("UTF-8");
                 } catch (UnsupportedEncodingException e) {
                     return true;
                 }
@@ -547,13 +547,13 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 
         @POST
         public ListBoxModel doFillCredsIdItems(@AncestorInPath Item item, @QueryParameter String credsId) {
-            item.checkPermission(Item.CONFIGURE);
             StandardListBoxModel result = new StandardListBoxModel();
             if (item == null) {
                 if (!Jenkins.getInstance().hasPermission(Item.CONFIGURE)) {
                     return result.add(credsId);
                 }
             } else {
+                item.checkPermission(Item.CONFIGURE);
                 if (!item.hasPermission(Item.EXTENDED_READ)
                         && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return result.add(credsId);
@@ -581,13 +581,13 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 
         @POST
         public ListBoxModel doFillProxyCredentialsIdItems(@AncestorInPath Item item, @QueryParameter String proxyCredentialsId) {
-            item.checkPermission(Item.CONFIGURE);
             StandardListBoxModel result = new StandardListBoxModel();
             if (item == null) {
                 if (!Jenkins.getInstance().hasPermission(Item.CONFIGURE)) {
                     return result.add(proxyCredentialsId);
                 }
             } else {
+                item.checkPermission(Item.CONFIGURE);
                 if (!item.hasPermission(Item.EXTENDED_READ)
                         && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return result.add(proxyCredentialsId);
@@ -730,6 +730,8 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                     case "profileList":
                         resp = client.listOptionProfiles(xmlReqData);
                         break;
+                    default:
+                        break;
                 }
             }
             return resp;
@@ -748,9 +750,13 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                         QualysCSResponse resp = callAPIs(api, client, lastId);
                         retry++;
 
+                        if (resp == null) {
+                            hasMoreRecords = false;
+                            break;
+                        }
                         logger.info("Response code received for API " + api + " call [page=" + page + "]: " + resp.responseCode);
                         hasMoreRecords = false;
-                        if (resp != null && resp.responseCode == 200) {
+                        if (resp.responseCode == 200) {
                             JsonObject response = resp.response;
                             JsonObject serviceResp = response.getAsJsonObject("ServiceResponse");
                             String responseCode = serviceResp.get("responseCode").getAsString();
@@ -806,7 +812,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                 //return object;
             }
 
-            model.sort(Helper.OptionItemmsComparator);
+            model.sort(Helper.optionItemsComparator);
             return model.withEmptySelection();
         }
 
@@ -843,7 +849,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                 e.printStackTrace();
                 //return object;
             }
-            model.sort(Helper.OptionItemmsComparator);
+            model.sort(Helper.optionItemsComparator);
             return model.withEmptySelection();
         }
 
@@ -879,7 +885,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                 e.printStackTrace();
                 //return object;
             }
-            model.sort(Helper.OptionItemmsComparator);
+            model.sort(Helper.optionItemsComparator);
             return model.withEmptySelection();
         }
 
@@ -1169,6 +1175,10 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws AbortException {
         listener.getLogger().println("Qualys Web App Scanning Connector - Started.");
         Result r = build.getResult();
+        if (r == null) {
+            listener.getLogger().println("Build result is not available yet.");
+            return true;
+        }
         String result = r.toString();
         if (result.equals("SUCCESS")) {
             if (webAppId != null && !webAppId.isEmpty()) {
@@ -1176,7 +1186,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                     Item project = build.getProject();
                     launchWebAppScan(build, listener, webAppId, project);
                 } catch (Exception e) {
-                    if (e.toString() == "java.lang.Exception") {
+                    if ("java.lang.Exception".equals(e.toString())) {
                         throw new AbortException("Exception in Qualys Vulnerabilities scan result. Finishing the build.");
                     } else if (e.getMessage().equalsIgnoreCase("sleep interrupted")) {
                         logger.log(Level.SEVERE, "Error: User Aborted");
@@ -1205,7 +1215,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                 Item project = run.getParent();
                 launchWebAppScan(run, taskListener, webAppId, project);
             } catch (Exception e) {
-                if (e.toString() == "java.lang.Exception") {
+                if ("java.lang.Exception".equals(e.toString())) {
                     throw new AbortException("Exception in Qualys Vulnerabilities scan result. Finishing the build.");
                 } else if (e.getMessage().equalsIgnoreCase("sleep interrupted")) {
                     logger.log(Level.SEVERE, "Error: User Aborted");
