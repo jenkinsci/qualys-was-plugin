@@ -527,7 +527,14 @@ public class ReportAction implements Action, RunAction2 {
 					org.json.JSONObject kbOutput = kbResult.getJSONObject("KNOWLEDGE_BASE_VULN_LIST_OUTPUT");
 					org.json.JSONObject kbResponse = kbOutput.getJSONObject("RESPONSE");
 					org.json.JSONObject kbVulnList = kbResponse.getJSONObject("VULN_LIST");
-					JSONArray kbVulns = kbVulnList.getJSONArray("VULN");
+					JSONArray kbVulns;
+					Object vulnObj = kbVulnList.get("VULN");
+					if (vulnObj instanceof JSONArray) {
+						kbVulns = (JSONArray) vulnObj;
+					} else {
+						kbVulns = new JSONArray();
+						kbVulns.put(vulnObj);
+					}
                     for (int j = 0; j < kbVulns.length(); j++) {
                         org.json.JSONObject listItem = kbVulns.getJSONObject(j);
 						String qid = Integer.toString(listItem.getInt("QID"));

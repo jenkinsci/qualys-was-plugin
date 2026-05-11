@@ -391,7 +391,14 @@ public class WASScanLauncher{
 				JSONObject kbVulnList = kbResponse.getJSONObject("VULN_LIST");
 				// kbVulnList converted to JSON for processing
 //				logger.info("Batch test : " + scanResultString);
-				JSONArray kbVulns = kbVulnList.getJSONArray("VULN");
+				JSONArray kbVulns;
+				Object vulnObj = kbVulnList.get("VULN");
+				if (vulnObj instanceof JSONArray) {
+					kbVulns = (JSONArray) vulnObj;
+				} else {
+					kbVulns = new JSONArray();
+					kbVulns.put(vulnObj);
+				}
 				for (int i = 0; i < kbVulns.length(); i++) {
 					JSONObject listItem = kbVulns.getJSONObject(i);
 					String qid = Integer.toString(listItem.getInt("QID"));
