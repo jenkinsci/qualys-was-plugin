@@ -197,11 +197,13 @@ public class ReportAction implements Action, RunAction2 {
 				JsonObject summary = scanObj.get("summary").getAsJsonObject();
 				for(int i = 0; i<summaryAttrs.length; i++) {
 					try {
-						scanResult.put(summaryAttrs[i], summary.get(summaryAttrs[i]).getAsString());
-					}
-					catch(NullPointerException exc){
-						logger.info("Couldn't fetch " + summaryAttrs[i] + " info. Reason: " + exc.getMessage() );
-						scanResult.put(summaryAttrs[i], " - ");
+						JsonElement element = summary.get(summaryAttrs[i]);
+						if(element != null && !element.isJsonNull()) {
+							scanResult.put(summaryAttrs[i], element.getAsString());
+						} else {
+							logger.info("Couldn't fetch " + summaryAttrs[i] + " info. Value is null.");
+							scanResult.put(summaryAttrs[i], " - ");
+						}
 					}
 					catch(Exception exc) {
 						logger.info("Couldn't fetch " + summaryAttrs[i] + " info. Reason: " + exc.getMessage() );
@@ -211,13 +213,16 @@ public class ReportAction implements Action, RunAction2 {
 
 				//scan duration
 				try {
-					String scanDuration = scanObj.get("scanDuration").getAsString();
-					long secondsL = Long.parseLong(scanDuration, 10);
-					String readableTime = Helper.secondsToReadableTime(secondsL);
-					scanResult.put("scanDuration", readableTime);
-				}catch(NullPointerException exc){
-					logger.info("Couldn't fetch scanDuration info. Reason: " + exc.getMessage() );
-					scanResult.put("scanDuration", "Couldn't find the value in API Response.");
+					JsonElement durationElement = scanObj.get("scanDuration");
+					if(durationElement != null && !durationElement.isJsonNull()) {
+						String scanDuration = durationElement.getAsString();
+						long secondsL = Long.parseLong(scanDuration, 10);
+						String readableTime = Helper.secondsToReadableTime(secondsL);
+						scanResult.put("scanDuration", readableTime);
+					} else {
+						logger.info("Couldn't fetch scanDuration info. Value is null.");
+						scanResult.put("scanDuration", "Couldn't find the value in API Response.");
+					}
 				}
 				catch(Exception exc) {
 					logger.info("Couldn't fetch scanDuration info. Reason: " + exc.getMessage() );
@@ -226,13 +231,15 @@ public class ReportAction implements Action, RunAction2 {
 
 				//scan ref #
 				try {
-					String scanRef = scanObj.get("reference").getAsString();
-					scanResult.put("reference", scanRef);
-					scanReference = scanRef;
-				}
-				catch(NullPointerException exc){
-					logger.info("Couldn't fetch reference info. Reason: " + exc.getMessage() );
-					scanResult.put("reference", "Couldn't find the value in API Response.");
+					JsonElement refElement = scanObj.get("reference");
+					if(refElement != null && !refElement.isJsonNull()) {
+						String scanRef = refElement.getAsString();
+						scanResult.put("reference", scanRef);
+						scanReference = scanRef;
+					} else {
+						logger.info("Couldn't fetch reference info. Value is null.");
+						scanResult.put("reference", "Couldn't find the value in API Response.");
+					}
 				}
 				catch(Exception exc) {
 					logger.info("Couldn't fetch reference info. Reason: " + exc.getMessage() );
@@ -241,16 +248,29 @@ public class ReportAction implements Action, RunAction2 {
 
 				//tagetUrl
 				try {
-					JsonObject target = scanObj.get("target").getAsJsonObject();
-					JsonObject webapp = target.get("webApp").getAsJsonObject();
-					String url = webapp.get("url").getAsString();
-
-					scanResult.put("targetUrl", url);
-					targetUrl = url;
-				}
-				catch(NullPointerException exc){
-					logger.info("Couldn't fetch targetUrl info. Reason: " + exc.getMessage() );
-					scanResult.put("targetUrl", "Couldn't find the value in API Response.");
+					JsonElement targetElement = scanObj.get("target");
+					if(targetElement != null && !targetElement.isJsonNull()) {
+						JsonObject target = targetElement.getAsJsonObject();
+						JsonElement webappElement = target.get("webApp");
+						if(webappElement != null && !webappElement.isJsonNull()) {
+							JsonObject webapp = webappElement.getAsJsonObject();
+							JsonElement urlElement = webapp.get("url");
+							if(urlElement != null && !urlElement.isJsonNull()) {
+								String url = urlElement.getAsString();
+								scanResult.put("targetUrl", url);
+								targetUrl = url;
+							} else {
+								logger.info("Couldn't fetch targetUrl info. Value is null.");
+								scanResult.put("targetUrl", "Couldn't find the value in API Response.");
+							}
+						} else {
+							logger.info("Couldn't fetch targetUrl info. webApp is null.");
+							scanResult.put("targetUrl", "Couldn't find the value in API Response.");
+						}
+					} else {
+						logger.info("Couldn't fetch targetUrl info. target is null.");
+						scanResult.put("targetUrl", "Couldn't find the value in API Response.");
+					}
 				}
 				catch(Exception exc) {
 					logger.info("Couldn't fetch targetUrl info. Reason: " + exc.getMessage() );
@@ -260,18 +280,30 @@ public class ReportAction implements Action, RunAction2 {
 				//vulnsBySeverity
 				scanResult.put("vulnsBySeverity", JSONObject.fromObject("{\"1\": 0,\"2\": 0,\"3\": 0,\"4\": 0,\"5\": 0}"));
 				try {
-					JsonObject stats = scanObj.get("stats").getAsJsonObject();
-					JsonObject global = stats.get("global").getAsJsonObject();
-					JSONObject obj = new JSONObject();
-					for(int i=1; i<=5; i++) {
-						obj.put(""+i, global.get("nbVulnsLevel"+i).getAsString());
+					JsonElement statsElement = scanObj.get("stats");
+					if(statsElement != null && !statsElement.isJsonNull()) {
+						JsonObject stats = statsElement.getAsJsonObject();
+						JsonElement globalElement = stats.get("global");
+						if(globalElement != null && !globalElement.isJsonNull()) {
+							JsonObject global = globalElement.getAsJsonObject();
+							JSONObject obj = new JSONObject();
+							for(int i=1; i<=5; i++) {
+								JsonElement vulnElement = global.get("nbVulnsLevel"+i);
+								if(vulnElement != null && !vulnElement.isJsonNull()) {
+									obj.put(""+i, vulnElement.getAsString());
+								} else {
+									obj.put(""+i, "0");
+								}
+							}
+							scanResult.put("vulnsBySeverity", obj);
+						} else {
+							logger.info("Couldn't fetch Vulnerabilities by Severity info. global is null.");
+							scanResult.put("vulnsBySeverity", "Couldn't find the value in API Response.");
+						}
+					} else {
+						logger.info("Couldn't fetch Vulnerabilities by Severity info. stats is null.");
+						scanResult.put("vulnsBySeverity", "Couldn't find the value in API Response.");
 					}
-					scanResult.put("vulnsBySeverity", obj);
-				}
-				catch(NullPointerException exc){
-					exc.printStackTrace();
-					logger.info("Couldn't fetch Vulnerabilities by Severity info. Reason: " + exc.getMessage() );
-					scanResult.put("vulnsBySeverity", "Couldn't find the value in API Response.");
 				}
 				catch(Exception exc) {
 					logger.info("Couldn't fetch Vulnerabilities by Severity info. Reason: " + exc.getMessage() );
@@ -283,14 +315,22 @@ public class ReportAction implements Action, RunAction2 {
 				String[] vulnsSummary = {"vulns", "sensitiveContents", "igs"};
 				for(int i = 0; i<vulnsSummary.length; i++) {
 					try {
-						JsonObject obj = scanObj.get(vulnsSummary[i]).getAsJsonObject();
-						String count = obj.get("count").getAsString();
-						scanResult.put(vulnsSummary[i], count);
-						if(vulnsSummary[i].equals("vulns") && Integer.parseInt(count) > 0) scanResult.put("vulnsTable", JSONObject.fromObject(gson.toJson(obj)));
-					}
-					catch(NullPointerException exc){
-						logger.info("Couldn't fetch " + vulnsSummary[i] +" info. Reason: " + exc.getMessage() );
-						scanResult.put(vulnsSummary[i], "Couldn't find the value in API Response.");
+						JsonElement vulnSummaryElement = scanObj.get(vulnsSummary[i]);
+						if(vulnSummaryElement != null && !vulnSummaryElement.isJsonNull()) {
+							JsonObject obj = vulnSummaryElement.getAsJsonObject();
+							JsonElement countElement = obj.get("count");
+							if(countElement != null && !countElement.isJsonNull()) {
+								String count = countElement.getAsString();
+								scanResult.put(vulnsSummary[i], count);
+								if(vulnsSummary[i].equals("vulns") && Integer.parseInt(count) > 0) scanResult.put("vulnsTable", JSONObject.fromObject(gson.toJson(obj)));
+							} else {
+								logger.info("Couldn't fetch " + vulnsSummary[i] +" info. count is null.");
+								scanResult.put(vulnsSummary[i], "Couldn't find the value in API Response.");
+							}
+						} else {
+							logger.info("Couldn't fetch " + vulnsSummary[i] +" info. Value is null.");
+							scanResult.put(vulnsSummary[i], "Couldn't find the value in API Response.");
+						}
 					}
 					catch(Exception exc) {
 						logger.info("Couldn't fetch " + vulnsSummary[i] +" info. Reason: " + exc.getMessage() );
@@ -333,7 +373,7 @@ public class ReportAction implements Action, RunAction2 {
 
 	public JSONObject parseScanStatus(String scanId) throws Exception {
 		JSONObject statusObj = new JSONObject();
-		JsonObject result = new JsonObject();
+		JsonObject result;
 		try {
 			QualysAuth auth = new QualysAuth();
             auth.setQualysCredentials(apiServer, authType, apiUser, apiPass.getPlainText(), clientId, clientSecret);
@@ -441,7 +481,6 @@ public class ReportAction implements Action, RunAction2 {
 		ArrayList<ArrayList<String>> qidBatches = new ArrayList<>();
 		JsonObject batchResult = new JsonObject();
 		try {
-			Gson gson = new Gson();
 			JsonObject vulns = scanResult.getAsJsonObject("vulns");
 			JsonArray listArr = vulns.getAsJsonArray("list");
 			int vulnsCount = vulns.get("count").getAsInt();
@@ -483,14 +522,19 @@ public class ReportAction implements Action, RunAction2 {
 
 			for (int i = 0; i <qids.size() ; i++) {
 				String ids = qids.get(i).toString().replace("[", "").replace("]", "").replace(" ", "");
-				Gson gson = new Gson();
 				org.json.JSONObject kbResult = getKbData(ids); //org.json
 				if (kbResult != null) {
 					org.json.JSONObject kbOutput = kbResult.getJSONObject("KNOWLEDGE_BASE_VULN_LIST_OUTPUT");
 					org.json.JSONObject kbResponse = kbOutput.getJSONObject("RESPONSE");
 					org.json.JSONObject kbVulnList = kbResponse.getJSONObject("VULN_LIST");
-					String scanResultString = gson.toJson(kbData);
-					JSONArray kbVulns = kbVulnList.getJSONArray("VULN");
+					JSONArray kbVulns;
+					Object vulnObj = kbVulnList.get("VULN");
+					if (vulnObj instanceof JSONArray) {
+						kbVulns = (JSONArray) vulnObj;
+					} else {
+						kbVulns = new JSONArray();
+						kbVulns.put(vulnObj);
+					}
                     for (int j = 0; j < kbVulns.length(); j++) {
                         org.json.JSONObject listItem = kbVulns.getJSONObject(j);
 						String qid = Integer.toString(listItem.getInt("QID"));

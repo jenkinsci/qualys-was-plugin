@@ -118,9 +118,6 @@
                         throw new Exception("["+responseCodeString + "] " + errorMessage + ", " + errorResolution);
                     }
                 }
-            }catch(NullPointerException ne) {
-                ne.printStackTrace();
-                throw new Exception("Please provide valid API and/or Proxy details.");
             }catch(Exception e) {
                 e.printStackTrace();
                 throw new Exception(e.getMessage());
@@ -143,11 +140,14 @@
                 apiResponse.responseCode = response.getStatusLine().getStatusCode();
                 logger.info("Server returned with ResponseCode: "+ apiResponse.responseCode);
                 if(response.getEntity()!=null) {
-                    BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-                    String output;
-                    while ((output = br.readLine()) != null) {
-                        apiResponseString += output;
+                    StringBuilder responseBuilder = new StringBuilder();
+                    try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            responseBuilder.append(output);
+                        }
                     }
+                    apiResponseString = responseBuilder.toString();
                     //httpclient.getConnectionManager().shutdown();
 
                     JsonParser jsonParser = new JsonParser();
@@ -233,11 +233,14 @@
                 apiResponse.responseCode = response.getStatusLine().getStatusCode();
                 logger.info("Server returned with ResponseCode: "+ apiResponse.responseCode);
                 if(response.getEntity()!=null) {
-                    BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-                    String output;
-                    while ((output = br.readLine()) != null) {
-                        apiResponseString += output;
+                    StringBuilder responseBuilder = new StringBuilder();
+                    try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            responseBuilder.append(output);
+                        }
                     }
+                    apiResponseString = responseBuilder.toString();
                     //httpclient.getConnectionManager().shutdown();
 
                     JsonParser jsonParser = new JsonParser();

@@ -384,15 +384,21 @@ public class WASScanLauncher{
 
 	public Boolean processBatch(String qids) {
 		try {
-			Gson gson = new Gson();
 			JSONObject kbResult = getKbData(qids); //org.json
 			if (kbResult != null) {
 				JSONObject kbOutput = kbResult.getJSONObject("KNOWLEDGE_BASE_VULN_LIST_OUTPUT");
 				JSONObject kbResponse = kbOutput.getJSONObject("RESPONSE");
 				JSONObject kbVulnList = kbResponse.getJSONObject("VULN_LIST");
-				String scanResultString = gson.toJson(kbVulnList);
+				// kbVulnList converted to JSON for processing
 //				logger.info("Batch test : " + scanResultString);
-				JSONArray kbVulns = kbVulnList.getJSONArray("VULN");
+				JSONArray kbVulns;
+				Object vulnObj = kbVulnList.get("VULN");
+				if (vulnObj instanceof JSONArray) {
+					kbVulns = (JSONArray) vulnObj;
+				} else {
+					kbVulns = new JSONArray();
+					kbVulns.put(vulnObj);
+				}
 				for (int i = 0; i < kbVulns.length(); i++) {
 					JSONObject listItem = kbVulns.getJSONObject(i);
 					String qid = Integer.toString(listItem.getInt("QID"));
@@ -464,9 +470,7 @@ public class WASScanLauncher{
 	}
     
     public String launchScan() throws Exception {
-    	JsonObject result = new JsonObject();
     	JsonObject requestData = new JsonObject();
-    	String printLine = "Launching Qualys WAS scan with - ";
     	//required POST parameers - name, type, webappID
     	if(scanType == null || scanType.isEmpty() || scanType.equals("")) {
     		throw new AbortException("Scan Type - Required parameter to launch scan is missing.");
@@ -514,7 +518,7 @@ public class WASScanLauncher{
     		wasScan.add("profile", profRec);
     	}
     	else if(optionProfile != null && optionProfile.equals("useDefault")) {
-    		printLine += "OptionProfile:" + "Default";
+    		listener.getLogger().println("Using default option profile.");
     	}
     	
     	/*
@@ -547,7 +551,7 @@ public class WASScanLauncher{
     		}
     		
     		QualysCSResponse response = apiClient.launchWASScan(requestData);
-    		result = response.response;
+    		JsonObject result = response.response;
     		//parse result
     		JsonElement respEl = result.get("ServiceResponse");
    			JsonObject respObj = respEl.getAsJsonObject();
@@ -576,7 +580,7 @@ public class WASScanLauncher{
     
     public Map<String, String> getWebappDetails(String id) throws Exception {
     	logger.info("Fetching web app details from server.");
-    	JsonObject result = new JsonObject();
+    	JsonObject result;
     	Map<String,String> webAppDetails = new HashMap<String, String>();
     	try {
     		QualysCSResponse webAppDetialsResp = apiClient.getWebAppDetails(webAppId);

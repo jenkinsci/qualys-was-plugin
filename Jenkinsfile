@@ -1,6 +1,11 @@
 buildPlugin(
-    jdkVersions: [11],
+    useContainerAgent: true,
+    tests: [skip: true],
     skipTests: true,
+    configurations: [
+        [platform: 'linux', jdk: 21],
+        [platform: 'windows', jdk: 21]
+    ],
     spotbugs: [
         qualityGates: [
             [
