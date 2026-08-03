@@ -14,7 +14,7 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.qualys.plugins.wasPlugin.QualysAuth.AuthType;
 import com.qualys.plugins.wasPlugin.util.OAuthCredential;
 import hudson.security.ACL;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
