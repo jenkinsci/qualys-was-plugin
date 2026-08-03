@@ -19,7 +19,7 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.qualys.plugins.wasPlugin.QualysAuth.AuthType;
 import com.qualys.plugins.wasPlugin.util.OAuthCredential;
 import hudson.util.Secret;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
