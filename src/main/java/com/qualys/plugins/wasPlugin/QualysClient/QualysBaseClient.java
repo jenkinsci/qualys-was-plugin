@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -11,6 +12,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+
 
 import com.qualys.plugins.wasPlugin.util.Helper;
 import org.apache.http.HttpHost;
@@ -36,10 +38,12 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
 class QualysBaseClient {
-    private QualysAuth auth;
+    protected QualysAuth auth;
     protected PrintStream stream;
-    protected int timeout = 30; // in seconds
+    protected int timeout = 60; // in seconds
     private static final String oAuthEndpoint = "/auth/oidc";
+    private String cachedToken;
+
     public QualysBaseClient (QualysAuth auth) {
         this.auth = auth;
         this.stream = System.out;
@@ -51,8 +55,29 @@ class QualysBaseClient {
     }
 
     public URL getAbsoluteUrl(String path) throws MalformedURLException {
+        return getAbsoluteUrl(path, false);
+    }
+
+    protected URL getAbsoluteUrl(String path, boolean useApiServer) throws MalformedURLException {
+        String server = this.auth.getServer();
+        // For OAUTH or OIDC auth types, use gateway domain unless the caller explicitly wants the API server
+        if (!useApiServer &&
+            (String.valueOf(this.auth.getAuthType()).equalsIgnoreCase("OAUTH") || 
+             String.valueOf(this.auth.getAuthType()).equalsIgnoreCase("OIDC"))) {
+            try {
+                server = Helper.getGatewayUrl(server);
+            } catch (IllegalArgumentException e) {
+                // If conversion fails, use original server
+                System.out.println("Warning: Could not convert to gateway URL: " + e.getMessage());
+            }
+        }
+        // Remove trailing slash from server if present
+        if (server.endsWith("/")) {
+            server = server.substring(0, server.length() - 1);
+        }
+        // Ensure path starts with slash
         path = (path.startsWith("/")) ? path : ("/" + path);
-        URL url = new URL(this.auth.getServer() + path);
+        URL url = new URL(server + path);
         return url;
     }
 
@@ -145,7 +170,7 @@ class QualysBaseClient {
             if (statusCode >= 200 && statusCode < 300) {
                 return responseBody;
             } else {
-                return null;
+                throw new IOException("POST request failed with status code " + statusCode + ": " + responseBody);
             }
         }
     }
@@ -163,9 +188,48 @@ class QualysBaseClient {
         if (String.valueOf(this.auth.getAuthType()).equalsIgnoreCase("BASIC"))
             return "Basic " + this.getBasicAuthHeader();
         else if (String.valueOf(this.auth.getAuthType()).equalsIgnoreCase("OAUTH")) {
-            return "Bearer " + this.generateJwtTokenUsingClientIdAndClientSecret();
+            if (cachedToken != null && !cachedToken.isEmpty()) {
+                return "Bearer " + cachedToken;
+            }
+            String token = this.generateJwtTokenUsingClientIdAndClientSecret();
+            this.cachedToken = token;
+            return "Bearer " + token;
+        } else if (String.valueOf(this.auth.getAuthType()).equalsIgnoreCase("OIDC")) {
+            if (cachedToken != null && !cachedToken.isEmpty()) {
+                return "Bearer " + cachedToken;
+            }
+            String token = this.getOidcAccessToken();
+            if (token == null || token.trim().isEmpty()) {
+                throw new IllegalStateException("Failed to obtain IDP access token.");
+            }
+            this.cachedToken = token;
+            return "Bearer " + token;
         } else
             return null;
+    }
+
+    protected void clearCachedToken() {
+        this.cachedToken = null;
+    }
+
+    public String getCachedToken() {
+        return this.cachedToken;
+    }
+
+    public void setCachedToken(String token) {
+        this.cachedToken = token;
+    }
+
+    public void generateToken() {
+        if (String.valueOf(this.auth.getAuthType()).equalsIgnoreCase("OAUTH")) {
+            this.cachedToken = this.generateJwtTokenUsingClientIdAndClientSecret();
+        } else if (String.valueOf(this.auth.getAuthType()).equalsIgnoreCase("OIDC")) {
+            String token = this.getOidcAccessToken();
+            if (token == null || token.trim().isEmpty()) {
+                throw new IllegalStateException("Failed to obtain IDP access token.");
+            }
+            this.cachedToken = token;
+        }
     }
 
     protected Map<String, String> getOauthHeaders() {
@@ -187,9 +251,74 @@ class QualysBaseClient {
         return headers;
     }
 
+    protected Map<String, String> getOidcHeaders() {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("accept", "application/json");
+        headers.put("Content-Type", "application/x-www-form-urlencoded");
+        return headers;
+    }
+
+    private String getOidcTokenEndpoint() {
+        String tokenUrl = this.auth.getTokenUrl();
+        if (tokenUrl != null && !tokenUrl.trim().isEmpty()) {
+            return tokenUrl;
+        }
+        throw new IllegalStateException("IDP tokenUrl is required to request an IDP access token.");
+    }
+
+    private String getOidcAccessToken() {
+        String tokenUrl = this.getOidcTokenEndpoint();
+        String clientId = this.auth.getClientId();
+        String clientSecret = this.auth.getClientSecret();
+        String oidcScope = this.auth.getOidcScope();
+        String audience = this.auth.getAudience();
+
+        CloseableHttpClient httpClient = null;
+        try {
+            System.out.println("Requesting new IDP access token from token URL: " + tokenUrl);
+            httpClient = getHttpClient();
+
+            StringBuilder formBody = new StringBuilder();
+            formBody.append("grant_type=client_credentials");
+            formBody.append("&client_id=").append(URLEncoder.encode(clientId, "UTF-8"));
+            formBody.append("&client_secret=").append(URLEncoder.encode(clientSecret, "UTF-8"));
+            if (oidcScope != null && !oidcScope.trim().isEmpty()) {
+                formBody.append("&scope=").append(URLEncoder.encode(oidcScope, "UTF-8"));
+            }
+            if (audience != null && !audience.trim().isEmpty()) {
+                formBody.append("&audience=").append(URLEncoder.encode(audience, "UTF-8"));
+            }
+
+            String response = this.sendPostRequest(httpClient, tokenUrl, this.getOidcHeaders(), formBody.toString());
+            if (response != null) {
+                JSONObject jsonResponse = new JSONObject(response);
+                String accessToken = jsonResponse.optString("access_token");
+                if (accessToken != null && !accessToken.isEmpty()) {
+                    System.out.println("Successfully received IDP access token.");
+                    return accessToken;
+                }
+                throw new IllegalStateException("No access_token in IDP response");
+            } else {
+                throw new IllegalStateException("Error while generating IDP access token - null response");
+            }
+        } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException | IOException e) {
+            System.out.println("Security exception while generating IDP access token: " + e.getClass().getName() + ": " + e.getMessage());
+            throw new IllegalStateException("Error while generating IDP access token: " + e.getMessage(), e);
+        } finally {
+            if (httpClient != null) {
+                try {
+                    httpClient.close();
+                } catch (IOException e) {
+                    System.out.println("Error closing HTTP client: " + e.getMessage());
+                }
+            }
+        }
+    }
+
     public String generateJwtTokenUsingClientIdAndClientSecret() {
         String apiUrl = Helper.getGatewayUrl(auth.getServer()) + oAuthEndpoint;
         System.out.println("Requesting new auth token using clientId and clientSecret from API Gateway Server:" + apiUrl);
+        
         CloseableHttpClient httpClient = null;
         try {
             httpClient = getHttpClient();
@@ -198,14 +327,21 @@ class QualysBaseClient {
             if (response != null) {
                 System.out.println("Successfully received auth token from API Gateway Server.");
                 return response;
-            } else
-                System.out.println("Error while generating JWT token.");
+            } else {
+                throw new IllegalStateException("Error while generating JWT token - null response.");
+            }
         } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException | IOException e) {
-            System.out.println("Error while generating JWT token " + e.getMessage());
+            System.out.println("Security exception while generating JWT token: " + e.getClass().getName() + ": " + e.getMessage());
+            throw new IllegalStateException("Error while generating JWT token: " + e.getMessage(), e);
+        } finally {
+            if (httpClient != null) {
+                try {
+                    httpClient.close();
+                } catch (IOException e) {
+                    System.out.println("Error closing HTTP client: " + e.getMessage());
+                }
+            }
         }
-
-        return null;
-
     }
 }
 

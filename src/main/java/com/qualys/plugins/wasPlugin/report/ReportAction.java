@@ -45,6 +45,9 @@ public class ReportAction implements Action, RunAction2 {
     private AuthType authType;
     private String clientId;
     private String clientSecret;
+	private String tokenUrl;
+	private String oidcScope;
+	private String audience;
 	private boolean useProxy;
 	private String proxyServer;
 	private int proxyPort;
@@ -72,7 +75,7 @@ public class ReportAction implements Action, RunAction2 {
     }
 
     public ReportAction(Run<?, ?> run, String scanId, String webAppId, String scanName, String apiServer, AuthType authType,
-                        String apiUser, Secret apiPass, String clientId, String clientSecret, boolean useProxy, String proxyServer, int proxyPort, String proxyUsername, Secret proxyPassword, String portalUrl) {
+                        String apiUser, Secret apiPass, String clientId, String clientSecret, String tokenUrl, String oidcScope, String audience, boolean useProxy, String proxyServer, int proxyPort, String proxyUsername, Secret proxyPassword, String portalUrl) {
 		this.scanId = scanId;
 		this.scanName = scanName;
 		this.webAppId = webAppId;
@@ -82,6 +85,9 @@ public class ReportAction implements Action, RunAction2 {
         this.authType = authType;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
+		this.tokenUrl = tokenUrl;
+		this.oidcScope = oidcScope;
+		this.audience = audience;
 		this.useProxy = useProxy;
 		this.proxyServer = proxyServer;
 		this.proxyPort = proxyPort;
@@ -122,7 +128,11 @@ public class ReportAction implements Action, RunAction2 {
 				respObj = gson.fromJson(resultStr, JsonObject.class);
 			}else {
 				QualysAuth auth = new QualysAuth();
-                auth.setQualysCredentials(apiServer, authType, apiUser, apiPass.getPlainText(), clientId, clientSecret);
+				if (authType == AuthType.OIDC) {
+					auth.setQualysCredentials(apiServer, authType, clientId, clientSecret, tokenUrl, oidcScope, audience);
+				} else {
+					auth.setQualysCredentials(apiServer, authType, apiUser, apiPass.getPlainText(), clientId, clientSecret);
+				}
 				if(useProxy) {
 					//int proxyPortInt = Integer.parseInt(proxyPort);
 					auth.setProxyCredentials(proxyServer, proxyPort, proxyUsername, proxyPassword.getPlainText());
@@ -376,7 +386,11 @@ public class ReportAction implements Action, RunAction2 {
 		JsonObject result;
 		try {
 			QualysAuth auth = new QualysAuth();
-            auth.setQualysCredentials(apiServer, authType, apiUser, apiPass.getPlainText(), clientId, clientSecret);
+			if (authType == AuthType.OIDC) {
+				auth.setQualysCredentials(apiServer, authType, clientId, clientSecret, tokenUrl, oidcScope, audience);
+			} else {
+				auth.setQualysCredentials(apiServer, authType, apiUser, apiPass.getPlainText(), clientId, clientSecret);
+			}
 			if(useProxy) {
 				//int proxyPortInt = Integer.parseInt(proxyPort);
 				auth.setProxyCredentials(proxyServer, proxyPort, proxyUsername, proxyPassword.getPlainText());
@@ -384,6 +398,14 @@ public class ReportAction implements Action, RunAction2 {
 			QualysCSClient qualysClient = new QualysCSClient(auth, System.out);
 			QualysCSResponse resp = qualysClient.getScanDetails(scanId);
 			result = resp.response;
+			if(result == null) {
+				if(resp.errored) {
+					String errorMsg = resp.errorMessage != null ? resp.errorMessage : "Unknown error";
+					throw new Exception("Error while getting scan details. " + errorMsg);
+				} else {
+					throw new Exception("Error while getting scan details. No response from server.");
+				}
+			}
 			JsonElement respEl = result.get("ServiceResponse");
 			JsonObject respObj = respEl.getAsJsonObject();
 			JsonElement respCodeObj = respObj.get("responseCode");
@@ -452,7 +474,11 @@ public class ReportAction implements Action, RunAction2 {
 	public org.json.JSONObject getKbData(String qids){
 
 		QualysAuth auth = new QualysAuth();
-		auth.setQualysCredentials(apiServer, apiUser, apiPass.getPlainText());
+		if (authType == AuthType.OIDC) {
+			auth.setQualysCredentials(apiServer, authType, clientId, clientSecret, tokenUrl, oidcScope, audience);
+		} else {
+			auth.setQualysCredentials(apiServer, authType, apiUser, apiPass.getPlainText(), clientId, clientSecret);
+		}
 		if(useProxy) {
 			//int proxyPortInt = Integer.parseInt(proxyPort);
 			auth.setProxyCredentials(proxyServer, proxyPort, proxyUsername, proxyPassword.getPlainText());
