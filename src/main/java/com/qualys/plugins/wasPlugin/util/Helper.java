@@ -331,7 +331,7 @@ public class Helper {
         if (description != null && !description.trim().isEmpty()) {
             label += " (" + description.trim() + ")";
         }
-        return label;
+        return id + "-" + label;
     }
 
     public static String safe(String s) {
