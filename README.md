@@ -60,3 +60,6 @@ If you are configuring pipeline project, click the `Generate Pipeline Script` bu
 ### Release notes for v3.0.0-
 * Added support for oAuth2 Authentication with Qualys ClientId and Client Sceret.
 * Added support for KSA pod
+
+### Release notes for v3.1.0-
+* Added IDP (OpenID Connect) authentication support for external IDP authentication.

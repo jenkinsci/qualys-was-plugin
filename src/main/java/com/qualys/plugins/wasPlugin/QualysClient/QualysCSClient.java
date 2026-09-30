@@ -20,6 +20,7 @@
     import java.io.*;
     import java.net.URL;
     import java.util.HashMap;
+    import java.util.Map;
     import java.util.logging.Logger;
 
     import org.apache.http.util.EntityUtils;
@@ -52,7 +53,7 @@
             this.apiMap.put("listWebApps", "/qps/rest/3.0/search/was/webapp/");
             this.apiMap.put("listOptionProfiles", "/qps/rest/3.0/search/was/optionprofile/");
             this.apiMap.put("listAuthRecords", "/qps/rest/3.0/search/was/webappauthrecord/");
-            this.apiMap.put("getKbData","/api/2.0/fo/knowledge_base/vuln/");
+            this.apiMap.put("getKbData","/api/4.0/fo/knowledge_base/vuln/");
         }
 
         public QualysCSResponse getScanResult(String scanId) {
@@ -99,6 +100,12 @@
             try {
                 QualysCSResponse response = getWebAppCount();
                 if(response.errored) {
+                    String errorMsg = response.errorMessage != null ? response.errorMessage : "";
+                    boolean isAuthError = errorMsg.contains("401") || errorMsg.toLowerCase().contains("unauthorized");
+                    boolean isNotOIDC = !String.valueOf(this.auth.getAuthType()).equalsIgnoreCase("OIDC");
+                    if (isAuthError && isNotOIDC) {
+                        throw new Exception("Unable to Authenticate User, Check Credentials");
+                    }
                     if(response.responseCode > 0)
                         throw new Exception("Please provide valid API and/or Proxy details." + " Server returned with Response code: " +response.responseCode);
                     else
@@ -131,32 +138,32 @@
 
             try {
                 URL url = this.getAbsoluteUrl(apiPath);
-                this.stream.println("Making Request: " + url.toString());
                 httpclient = this.getHttpClient();
-
-                HttpGet getRequest = new HttpGet(url.toString());
-                this.getCommonHeaders().forEach(getRequest::addHeader);
-                CloseableHttpResponse response = httpclient.execute(getRequest);
-                apiResponse.responseCode = response.getStatusLine().getStatusCode();
-                logger.info("Server returned with ResponseCode: "+ apiResponse.responseCode);
-                if(response.getEntity()!=null) {
-                    StringBuilder responseBuilder = new StringBuilder();
-                    try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"))) {
-                        String output;
-                        while ((output = br.readLine()) != null) {
-                            responseBuilder.append(output);
-                        }
+                this.stream.println("Making Request: " + url.toString());
+                
+                String responseBody;
+                try {
+                    responseBody = this.sendGetRequest(httpclient, url.toString(), this.getCommonHeaders());
+                } catch (IOException e) {
+                    if (e.getMessage() != null && e.getMessage().contains("401")) {
+                        this.stream.println("Received 401 from API, retrying once with fresh token...");
+                        this.clearCachedToken();
+                        responseBody = this.sendGetRequest(httpclient, url.toString(), this.getCommonHeaders());
+                    } else {
+                        throw e;
                     }
-                    apiResponseString = responseBuilder.toString();
-                    //httpclient.getConnectionManager().shutdown();
-
-                    JsonParser jsonParser = new JsonParser();
-                    JsonElement jsonTree = jsonParser.parse(apiResponseString);
-                    if (!jsonTree.isJsonObject()) {
-                        throw new InvalidAPIResponseException();
-                    }
-                    apiResponse.response = jsonTree.getAsJsonObject();
                 }
+                apiResponse.responseCode = 200;
+                logger.info("Server returned with ResponseCode: "+ apiResponse.responseCode);
+                this.stream.println("Server returned with ResponseCode: "+ apiResponse.responseCode);
+                this.stream.println("Response entity is not null, processing response body");
+
+                JsonParser jsonParser = new JsonParser();
+                JsonElement jsonTree = jsonParser.parse(responseBody);
+                if (!jsonTree.isJsonObject()) {
+                    throw new InvalidAPIResponseException();
+                }
+                apiResponse.response = jsonTree.getAsJsonObject();
 
             }catch (JsonParseException je) {
                 apiResponse.errored = true;
@@ -164,42 +171,65 @@
             } catch (Exception e) {
                 apiResponse.errored = true;
                 apiResponse.errorMessage = e.getMessage();
+            } finally {
+                if (httpclient != null) {
+                    try {
+                        httpclient.close();
+                    } catch (IOException e) {
+                        logger.info("Error closing HTTP client: " + e.getMessage());
+                    }
+                }
             }
 
             return apiResponse;
         }
 
         private String getKbApiCall(String apiPath) {
-            //Added new class QualysWasResponse with String type
-//            QualysWasResponse apiResponse = new QualysWasResponse();
             String responseContent="";
             CloseableHttpClient httpclient = null;
 
             try {
-                URL url = this.getAbsoluteUrl(apiPath);
+                URL url = this.getAbsoluteUrl(apiPath, true);
                 this.stream.println("Making Request: " + url.toString());
                 httpclient = this.getHttpClient();
 
-                HttpGet getRequest = new HttpGet(url.toString());
-                this.getCommonHeaders().forEach(getRequest::addHeader);
-                getRequest.addHeader("X-Requested-With", "Jenkins");
-                CloseableHttpResponse response = httpclient.execute(getRequest);
-                if(response.getEntity()!=null) {
-                    JSONObject responseJson = new JSONObject();
-                    responseJson.put("statusCode", response.getStatusLine().getStatusCode());
+                Map<String, String> headers = new HashMap<>();
+                headers.putAll(this.getCommonHeaders());
+                headers.put("X-Requested-With", "Jenkins");
 
-                    String responseBody = "{}";
-                    if (response.getEntity() != null) {
-                        responseBody = EntityUtils.toString(response.getEntity());
+                String responseBody;
+                try {
+                    responseBody = this.sendGetRequest(httpclient, url.toString(), headers);
+                } catch (IOException e) {
+                    if (e.getMessage() != null && e.getMessage().contains("401")) {
+                        this.stream.println("Received 401 from KB API, retrying once with fresh token...");
+                        this.clearCachedToken();
+                        headers.putAll(this.getCommonHeaders());
+                        headers.put("X-Requested-With", "Jenkins");
+                        responseBody = this.sendGetRequest(httpclient, url.toString(), headers);
+                    } else {
+                        throw e;
                     }
-                    responseJson.put("body", responseBody);
-
-                     responseContent = responseJson.toString();
-                    return responseContent;
                 }
+
+                if (responseBody != null) {
+                    JSONObject responseJson = new JSONObject();
+                    responseJson.put("statusCode", 200);
+                    responseJson.put("body", responseBody);
+                    responseContent = responseJson.toString();
+                }
+                return responseContent;
 
             }catch (Exception e) {
                 logger.info("Error occured in getKBApi call: "+ e.getMessage());
+            } finally {
+                if (httpclient != null) {
+                    try {
+                        httpclient.close();
+                    } catch (IOException e) {
+                        logger.info("Error closing HTTP client: " + e.getMessage());
+                    }
+                }
             }
 
             return "";
@@ -212,44 +242,51 @@
 
             try {
                 URL url = this.getAbsoluteUrl(apiPath);
-                this.stream.println("Making Request: " + url.toString());
                 httpclient = this.getHttpClient();
-
-                HttpPost postRequest = new HttpPost(url.toString());
-                this.getCommonHeaders().forEach(postRequest::addHeader);
+                
+                Map<String, String> headers = new HashMap<>();
+                headers.putAll(this.getCommonHeaders());
                 Gson gson = new Gson();
+                this.stream.println("Making Request: " + url.toString());
+                
+                String body = null;
                 if(requestDataJson != null) {
-                    postRequest.removeHeaders("Content-Type");
-                    postRequest.addHeader("Content-Type", "application/json");
-                    StringEntity entity = new StringEntity(gson.toJson(requestDataJson));
-                    postRequest.setEntity(entity);
+                    headers.put("Content-Type", "application/json");
+                    body = gson.toJson(requestDataJson);
                 }else if(requestXmlString != null) {
-                    postRequest.removeHeaders("Content-Type");
-                    postRequest.addHeader("Content-Type", "application/xml");
-                    HttpEntity entity = new ByteArrayEntity(requestXmlString.getBytes("UTF-8"));
-                    postRequest.setEntity(entity);
+                    headers.put("Content-Type", "application/xml");
+                    body = requestXmlString;
                 }
-                CloseableHttpResponse response = httpclient.execute(postRequest);
-                apiResponse.responseCode = response.getStatusLine().getStatusCode();
-                logger.info("Server returned with ResponseCode: "+ apiResponse.responseCode);
-                if(response.getEntity()!=null) {
-                    StringBuilder responseBuilder = new StringBuilder();
-                    try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"))) {
-                        String output;
-                        while ((output = br.readLine()) != null) {
-                            responseBuilder.append(output);
+                
+                String responseBody;
+                try {
+                    responseBody = this.sendPostRequest(httpclient, url.toString(), headers, body);
+                } catch (IOException e) {
+                    if (e.getMessage() != null && e.getMessage().contains("401")) {
+                        this.stream.println("Received 401 from API, retrying once with fresh token...");
+                        this.clearCachedToken();
+                        headers = new HashMap<>();
+                        headers.putAll(this.getCommonHeaders());
+                        if(requestDataJson != null) {
+                            headers.put("Content-Type", "application/json");
+                        }else if(requestXmlString != null) {
+                            headers.put("Content-Type", "application/xml");
                         }
+                        responseBody = this.sendPostRequest(httpclient, url.toString(), headers, body);
+                    } else {
+                        throw e;
                     }
-                    apiResponseString = responseBuilder.toString();
-                    //httpclient.getConnectionManager().shutdown();
-
-                    JsonParser jsonParser = new JsonParser();
-                    JsonElement jsonTree = jsonParser.parse(apiResponseString);
-                    if (!jsonTree.isJsonObject()) {
-                        throw new InvalidAPIResponseException();
-                    }
-                    apiResponse.response = jsonTree.getAsJsonObject();
                 }
+                apiResponse.responseCode = 200;
+                logger.info("Server returned with ResponseCode: "+ apiResponse.responseCode);
+                apiResponseString = responseBody;
+
+                JsonParser jsonParser = new JsonParser();
+                JsonElement jsonTree = jsonParser.parse(apiResponseString);
+                if (!jsonTree.isJsonObject()) {
+                    throw new InvalidAPIResponseException();
+                }
+                apiResponse.response = jsonTree.getAsJsonObject();
 
             }catch (JsonParseException je) {
                 apiResponse.errored = true;
@@ -257,6 +294,14 @@
             } catch (Exception e) {
                 apiResponse.errored = true;
                 apiResponse.errorMessage = e.getMessage();
+            } finally {
+                if (httpclient != null) {
+                    try {
+                        httpclient.close();
+                    } catch (IOException e) {
+                        logger.info("Error closing HTTP client: " + e.getMessage());
+                    }
+                }
             }
 
             return apiResponse;

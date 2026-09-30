@@ -14,6 +14,9 @@ public class QualysAuth {
     private int proxyPort;
     private String clientId;
     private String clientSecret;
+    private String tokenUrl;
+    private String oidcScope;
+    private String audience;
 
     public QualysAuth () {
         
@@ -64,6 +67,30 @@ public class QualysAuth {
         return clientSecret;
     }
 
+    public String getTokenUrl() {
+        return tokenUrl;
+    }
+
+    public String getOidcScope() {
+        return oidcScope;
+    }
+
+    public String getAudience() {
+        return audience;
+    }
+
+    public void setTokenUrl(String tokenUrl) {
+        this.tokenUrl = tokenUrl;
+    }
+
+    public void setOidcScope(String oidcScope) {
+        this.oidcScope = oidcScope;
+    }
+
+    public void setAudience(String audience) {
+        this.audience = audience;
+    }
+
    
     public void setQualysCredentials(String server, String username, String password) {
     	this.server = server;
@@ -78,6 +105,16 @@ public class QualysAuth {
         this.password = Secret.fromString(password);
         this.clientId = clientId;
         this.clientSecret = clientSecret;
+    }
+
+    public void setQualysCredentials(String server, AuthType authType, String clientId, String clientSecret, String tokenUrl, String oidcScope, String audience) {
+        this.authType = authType;
+        this.server = server;
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.tokenUrl = tokenUrl;
+        this.oidcScope = oidcScope;
+        this.audience = audience;
     }
     public void setProxyCredentials(String proxyServer, int proxyPort, String proxyUsername, String proxyPassword) {
     	this.proxyServer = proxyServer;

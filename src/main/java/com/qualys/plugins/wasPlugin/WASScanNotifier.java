@@ -8,18 +8,20 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.qualys.plugins.wasPlugin.QualysAuth.AuthType;
 import com.qualys.plugins.wasPlugin.util.OAuthCredential;
+import com.qualys.plugins.wasPlugin.util.OIDCCredential;
 import hudson.util.Secret;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -466,6 +468,12 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
             return true;
         }
 
+        private final Map<String, String> tokenCache = new ConcurrentHashMap<>();
+
+        private String getTokenCacheKey(String server, String credsId) {
+            return server + "|" + credsId;
+        }
+
         public boolean isNonUTF8String(String string) {
             if (string != null && !string.isEmpty()) {
                 try {
@@ -575,6 +583,14 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                 result.add(label, c.getId());
             }
 
+            // IDP: show "clientId (desc)"
+            for (OIDCCredential c : CredentialsProvider.lookupCredentials(
+                    OIDCCredential.class, item, ACL.SYSTEM, Collections.emptyList())) {
+                String clientId = safe(c.getClientId());
+                String label = buildMaskedLabel(clientId, "*****", c.getDescription(), c.getId());
+                result.add(label, c.getId());
+            }
+
             return result.includeCurrentValue(credsId);
 
         }
@@ -632,6 +648,14 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                         clientId = oauth.getClientId();
                         clientSecret = oauth.getClientSecret();
                         auth.setQualysCredentials(apiServer, AuthType.OAuth, "", "", clientId, clientSecret);
+                    } else if (credentials instanceof OIDCCredential) {
+                        OIDCCredential oidc = (OIDCCredential) credentials;
+                        clientId = oidc.getClientId();
+                        clientSecret = oidc.getClientSecret();
+                        String tokenUrl = oidc.getTokenUrl();
+                        String oidcScope = oidc.getOidcScope();
+                        String audience = oidc.getAudience();
+                        auth.setQualysCredentials(apiServer, AuthType.OIDC, clientId, clientSecret, tokenUrl, oidcScope, audience);
                     } else
                         throw new IllegalArgumentException("Unsupported credential type: " + credentials.getClass());
                 } else
@@ -655,8 +679,31 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                 auth.setProxyCredentials(proxyServer, proxyPortInt, proxyUsername, proxyPassword);
             }
             QualysCSClient client = new QualysCSClient(auth, System.out);
+            String cacheKey = getTokenCacheKey(apiServer, credsId);
+            String token = tokenCache.get(cacheKey);
+            if (token == null || token.isEmpty()) {
+                synchronized (tokenCache) {
+                    token = tokenCache.get(cacheKey);
+                    if (token == null || token.isEmpty()) {
+                        client.generateToken();
+                        token = client.getCachedToken();
+                        if (token != null && !token.isEmpty()) {
+                            tokenCache.put(cacheKey, token);
+                        }
+                    }
+                }
+            }
+            if (token != null && !token.isEmpty()) {
+                client.setCachedToken(token);
+            }
             return client;
+        }
 
+        private void updateTokenCache(String server, String credsId, QualysCSClient client) {
+            String token = client.getCachedToken();
+            if (token != null && !token.isEmpty()) {
+                tokenCache.put(getTokenCacheKey(server, credsId), token);
+            }
         }
 
         public ListBoxModel doFillOptionProfileItems() {
@@ -744,31 +791,25 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
             JsonArray dataList = new JsonArray();
             try {
                 while (hasMoreRecords) {
-                    int retry = 0;
-                    while (retry < 3) {
-                        if (retry > 0) logger.info("Retrying " + api + " call: " + retry);
-                        QualysCSResponse resp = callAPIs(api, client, lastId);
-                        retry++;
+                    QualysCSResponse resp = callAPIs(api, client, lastId);
 
-                        if (resp == null) {
-                            hasMoreRecords = false;
-                            break;
-                        }
-                        logger.info("Response code received for API " + api + " call [page=" + page + "]: " + resp.responseCode);
+                    if (resp == null) {
                         hasMoreRecords = false;
-                        if (resp.responseCode == 200) {
-                            JsonObject response = resp.response;
-                            JsonObject serviceResp = response.getAsJsonObject("ServiceResponse");
-                            String responseCode = serviceResp.get("responseCode").getAsString();
-                            if (responseCode.equalsIgnoreCase("success")) {
-                                int count = serviceResp.get("count").getAsInt();
-                                if (count > 0) {
-                                    hasMoreRecords = serviceResp.get("hasMoreRecords").getAsBoolean();
-                                    lastId = hasMoreRecords ? serviceResp.get("lastId").getAsString() : null;
-                                    JsonArray arr = serviceResp.get("data").getAsJsonArray();
-                                    dataList.addAll(arr);
-                                }
-                                break;
+                        break;
+                    }
+                    logger.info("Response code received for API " + api + " call [page=" + page + "]: " + resp.responseCode);
+                    hasMoreRecords = false;
+                    if (resp.responseCode == 200) {
+                        JsonObject response = resp.response;
+                        JsonObject serviceResp = response.getAsJsonObject("ServiceResponse");
+                        String responseCode = serviceResp.get("responseCode").getAsString();
+                        if (responseCode.equalsIgnoreCase("success")) {
+                            int count = serviceResp.get("count").getAsInt();
+                            if (count > 0) {
+                                hasMoreRecords = serviceResp.get("hasMoreRecords").getAsBoolean();
+                                lastId = hasMoreRecords ? serviceResp.get("lastId").getAsString() : null;
+                                JsonArray arr = serviceResp.get("data").getAsJsonArray();
+                                dataList.addAll(arr);
                             }
                         }
                     }
@@ -797,6 +838,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                     QualysCSClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
                     logger.info("Fetching web applications list ... ");
                     JsonArray dataList = getDataList("webAppList", client);
+                    updateTokenCache(server, credsId, client);
                     for (JsonElement webapp : dataList) {
                         JsonObject obj = webapp.getAsJsonObject();
                         JsonObject webAppObj = obj.getAsJsonObject("WebApp");
@@ -833,6 +875,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                     QualysCSClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
                     logger.info("Fetching Auth Records list ... ");
                     JsonArray dataList = getDataList("authRecordList", client);
+                    updateTokenCache(server, credsId, client);
                     for (JsonElement webapp : dataList) {
                         JsonObject obj = webapp.getAsJsonObject();
                         JsonObject webAppObj = obj.getAsJsonObject("WebAppAuthRecord");
@@ -870,6 +913,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                     QualysCSClient client = getQualysClient(server, credsId, useProxy, proxyServer, proxyPort, proxyCredentialsId, item);
                     logger.info("Fetching Option Profiles list ... ");
                     JsonArray dataList = getDataList("profileList", client);
+                    updateTokenCache(server, credsId, client);
                     for (JsonElement webapp : dataList) {
                         JsonObject obj = webapp.getAsJsonObject();
                         JsonObject webAppObj = obj.getAsJsonObject("OptionProfile");
@@ -993,6 +1037,16 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                                 clientSecret = oauth.getClientSecret();
                                 logger.info("Client id: " + clientId);
                                 auth.setQualysCredentials(server, authType, "", "", clientId, clientSecret);
+                            } else if (credentials instanceof OIDCCredential) {
+                                OIDCCredential oidc = (OIDCCredential) credentials;
+                                authType = AuthType.OIDC;
+                                clientId = oidc.getClientId();
+                                clientSecret = oidc.getClientSecret();
+                                String tokenUrl = oidc.getTokenUrl();
+                                String oidcScope = oidc.getOidcScope();
+                                String audience = oidc.getAudience();
+                                logger.info("Client id: " + clientId);
+                                auth.setQualysCredentials(server, authType, clientId, clientSecret, tokenUrl, oidcScope, audience);
                             } else
                                 throw new IllegalArgumentException("Unsupported credential type: " + credentials.getClass());
                         } else
@@ -1017,8 +1071,10 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                         }
                         auth.setProxyCredentials(proxyServer, proxyPortInt, proxyUsername, proxyPassword);
                     }
+                    tokenCache.remove(getTokenCacheKey(server, credsId));
                     QualysCSClient client = new QualysCSClient(auth, System.out);
                     client.testConnection();
+                    updateTokenCache(server, credsId, client);
                     return FormValidation.ok("Connection test successful!");
                 }
             } catch (Exception e) {
@@ -1247,6 +1303,9 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
         String apiPass = "";
         String clientId = "";
         String clientSecret = "";
+        String tokenUrl = "";
+        String oidcScope = "";
+        String audience = "";
         String proxyUsername = "";
         String proxyPassword = "";
         AuthType authType;
@@ -1274,6 +1333,15 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
                     clientId = oauth.getClientId();
                     clientSecret = oauth.getClientSecret();
                     auth.setQualysCredentials(apiServer, AuthType.OAuth, "", "", clientId, clientSecret);
+                } else if (credentials instanceof OIDCCredential) {
+                    OIDCCredential oidc = (OIDCCredential) credentials;
+                    authType = AuthType.OIDC;
+                    clientId = oidc.getClientId();
+                    clientSecret = oidc.getClientSecret();
+                    tokenUrl = oidc.getTokenUrl();
+                    oidcScope = oidc.getOidcScope();
+                    audience = oidc.getAudience();
+                    auth.setQualysCredentials(apiServer, AuthType.OIDC, clientId, clientSecret, tokenUrl, oidcScope, audience);
                 } else
                     throw new IllegalArgumentException("Unsupported credential type: " + credentials.getClass());
             } else
@@ -1299,6 +1367,22 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
         }
         QualysCSClient client = new QualysCSClient(auth, System.out);
         try {
+            String authTypeDescription;
+            switch (authType) {
+                case Basic:
+                    authTypeDescription = "Basic Auth";
+                    break;
+                case OAuth:
+                    authTypeDescription = "OAuth";
+                    break;
+                case OIDC:
+                    authTypeDescription = "IDP";
+                    break;
+                default:
+                    authTypeDescription = authType.toString();
+            }
+            listener.getLogger().println("USING AUTH TYPE: " + authTypeDescription);
+            listener.getLogger().println("Using credentials ID: " + credsId );
             listener.getLogger().println("Testing connection with Qualys API Server...");
             client.testConnection();
             listener.getLogger().println("Test connection successful.");
@@ -1319,7 +1403,7 @@ public class WASScanNotifier extends Notifier implements SimpleBuildStep {
 
         WASScanLauncher launcher = new WASScanLauncher(run, listener, webAppID, scanName, scanType, authRecord, optionProfile, cancelOptions, authRecordId,
                 optionProfileId, cancelHours, isFailConditionsConfigured, pollingInterval, vulnsTimeout, getCriteriaAsJsonObject(),
-                apiServer, authType, apiUser, apiPass, clientId, clientSecret, useProxy, proxyServer, proxyPort, proxyUsername, proxyPassword, portalUrl, failOnScanError);
+                apiServer, authType, apiUser, apiPass, clientId, clientSecret, tokenUrl, oidcScope, audience, useProxy, proxyServer, proxyPort, proxyUsername, proxyPassword, portalUrl, failOnScanError);
 
         logger.info("Qualys task - Started Launching web app scanning with WAS.");
         launcher.getAndProcessLaunchScanResult();

@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import com.qualys.plugins.wasPlugin.QualysAuth.AuthType;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -56,6 +56,9 @@ public class WASScanLauncher{
     private Secret apiPass;
     private String clientId;
     private String clientSecret;
+    private String tokenUrl;
+    private String oidcScope;
+    private String audience;
     private boolean useProxy;
     private String proxyServer;
     private int proxyPort;
@@ -79,7 +82,7 @@ public class WASScanLauncher{
     public WASScanLauncher(Run<?, ?> run, TaskListener listener, String webAppId, String scanName,
                            String scanType, String authRecord, String optionProfile, String cancelOptions, String authRecordId,
                            String optionProfileId, String cancelHours, boolean isFailConditionsConfigured, String pollingIntervalStr, String vulnsTimeoutStr, JsonObject criteriaObject,
-                           String apiServer, AuthType authType, String apiUser, String apiPass, String clientId, String clientSecret, boolean useProxy, String proxyServer, int proxyPort, String proxyUsername, String proxyPassword, String portalUrl, boolean failOnScanError) {
+                           String apiServer, AuthType authType, String apiUser, String apiPass, String clientId, String clientSecret, String tokenUrl, String oidcScope, String audience, boolean useProxy, String proxyServer, int proxyPort, String proxyUsername, String proxyPassword, String portalUrl, boolean failOnScanError) {
     	this.run = run;
         this.listener = listener;
         this.webAppId = webAppId;
@@ -98,6 +101,9 @@ public class WASScanLauncher{
         this.apiPass = Secret.fromString(apiPass);
         this.clientId = clientId;
         this.clientSecret = clientSecret;
+        this.tokenUrl = tokenUrl;
+        this.oidcScope = oidcScope;
+        this.audience = audience;
 
         this.useProxy = useProxy;
         this.proxyServer = proxyServer;
@@ -115,7 +121,11 @@ public class WASScanLauncher{
         this.isFailConditionsConfigured = isFailConditionsConfigured;
         
         QualysAuth auth = new QualysAuth();
-        auth.setQualysCredentials(apiServer, authType, apiUser, apiPass, clientId, clientSecret);
+		if (authType == AuthType.OIDC) {
+			auth.setQualysCredentials(apiServer, authType, clientId, clientSecret, tokenUrl, oidcScope, audience);
+		} else {
+			auth.setQualysCredentials(apiServer, authType, apiUser, apiPass, clientId, clientSecret);
+		}
     	if(useProxy) {
         	//int proxyPortInt = Integer.parseInt(proxyPort);
         	auth.setProxyCredentials(proxyServer, proxyPort, proxyUsername, proxyPassword);
@@ -154,20 +164,20 @@ public class WASScanLauncher{
 	    		listener.getLogger().println(new Timestamp(System.currentTimeMillis()) + " New Scan launched successfully. Scan ID: " + scanId);
 	    		logger.info("New Scan launched successfully.");
 	    		
+				//wait for scan to finish
+				JsonObject result = fetchScanResult(scanId);
+				
 				//evaluate for failure conditions
 				JsonObject evaluationResult = null;
 				Boolean buildPassed = true;
-	    		if(isFailConditionsConfigured) {
-					JsonObject result = fetchScanResult(scanId);
-					if(result != null) {
-						evaluationResult = evaluateFailurePolicy(result);
-						Helper.copyEvaluationResultToFile(run.getArtifactsDir().getAbsolutePath(), "qualys_" + scanId, listener.getLogger(), evaluationResult.getAsJsonObject("result"));
-						buildPassed = evaluationResult.get("passed").getAsBoolean();
-					}
+	    		if(isFailConditionsConfigured && result != null) {
+					evaluationResult = evaluateFailurePolicy(result);
+					Helper.copyEvaluationResultToFile(run.getArtifactsDir().getAbsolutePath(), "qualys_" + scanId, listener.getLogger(), evaluationResult.getAsJsonObject("result"));
+					buildPassed = evaluationResult.get("passed").getAsBoolean();
 				}
 	    		
 	    		//create status link on right side
-                ReportAction action = new ReportAction(run, scanId, webAppId, scanName, apiServer, authType, apiUser, apiPass, clientId, clientSecret, useProxy, proxyServer, proxyPort, proxyUsername, proxyPassword, portalUrl);
+	    			ReportAction action = new ReportAction(run, scanId, webAppId, scanName, apiServer, authType, apiUser, apiPass, clientId, clientSecret, tokenUrl, oidcScope, audience, useProxy, proxyServer, proxyPort, proxyUsername, proxyPassword, portalUrl);
 				run.addAction(action);
 				
 				if(isFailConditionsConfigured && !buildPassed) {
@@ -431,6 +441,14 @@ public class WASScanLauncher{
 		try {
 			QualysCSResponse statusResponse = apiClient.getScanStatus(scanId);
 			JsonObject result = statusResponse.response;
+			if(result == null) {
+				if(statusResponse.errored) {
+					String errorMsg = statusResponse.errorMessage != null ? statusResponse.errorMessage : "Unknown error";
+					throw new Exception("Error while getting scan status. " + errorMsg);
+				} else {
+					throw new Exception("Error while getting scan status. No response from server.");
+				}
+			}
 //			logger.info("API RESPONSE : " + result.toString());
 			JsonElement respEl = result.get("ServiceResponse");
 			JsonObject respObj = respEl.getAsJsonObject();
@@ -552,6 +570,15 @@ public class WASScanLauncher{
     		
     		QualysCSResponse response = apiClient.launchWASScan(requestData);
     		JsonObject result = response.response;
+    		// Check if response is null or errored
+    		if(result == null) {
+    			if(response.errored) {
+    				String errorMsg = response.errorMessage != null ? response.errorMessage : "Unknown error";
+    				throw new AbortException("Error while launching new scan. " + errorMsg);
+    			} else {
+    				throw new AbortException("Error while launching new scan. No response from server.");
+    			}
+    		}
     		//parse result
     		JsonElement respEl = result.get("ServiceResponse");
    			JsonObject respObj = respEl.getAsJsonObject();
@@ -583,8 +610,16 @@ public class WASScanLauncher{
     	JsonObject result;
     	Map<String,String> webAppDetails = new HashMap<String, String>();
     	try {
-    		QualysCSResponse webAppDetialsResp = apiClient.getWebAppDetails(webAppId);
+    		QualysCSResponse webAppDetialsResp = apiClient.getWebAppDetails(id);
     		result = webAppDetialsResp.response;
+    		if(result == null) {
+    			if(webAppDetialsResp.errored) {
+    				String errorMsg = webAppDetialsResp.errorMessage != null ? webAppDetialsResp.errorMessage : "Unknown error";
+    				throw new Exception("Error while getting web app details. " + errorMsg);
+    			} else {
+    				throw new Exception("Error while getting web app details. No response from server.");
+    			}
+    		}
 //    		logger.info("API RESPONSE : " + result.toString());
     		JsonElement respEl = result.get("ServiceResponse");
    			JsonObject respObj = respEl.getAsJsonObject();
